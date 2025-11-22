@@ -12,13 +12,20 @@
   - Setup Jest i fast-check dla testowania
   - _Requirements: 11.1, 11.5_
 
-- [ ] 2. Implementacja modeli danych i typów TypeScript
+- [x] 2. Implementacja modeli danych i typów TypeScript
+
+
+
+
+
   - Utworzenie types/models.ts z interfejsami (LyricLine, Song, Setlist, AppSettings, KeyMapping)
   - Utworzenie utils/idGenerator.ts dla generowania unikalnych ID
   - Utworzenie utils/validation.ts z funkcjami walidacji
   - _Requirements: 2.3, 2.5_
 
-- [ ] 2.1 Napisanie testów property dla walidacji
+- [x] 2.1 Napisanie testów property dla walidacji
+
+
   - **Property 29: Walidacja odrzuca niepoprawne dane importu**
   - **Validates: Requirements 12.2, 12.4**
 
