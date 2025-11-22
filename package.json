@@ -1,0 +1,49 @@
+{
+  "name": "stageprompt",
+  "version": "1.0.0",
+  "description": "StagePrompt - Teleprompter Application for Android Tablets",
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
+  },
+  "keywords": [
+    "teleprompter",
+    "react-native",
+    "expo",
+    "typescript"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-navigation/native": "^7.1.21",
+    "@react-navigation/stack": "^7.6.7",
+    "expo": "^54.0.25",
+    "expo-status-bar": "^3.0.8",
+    "react": "^19.2.0",
+    "react-native": "^0.82.1",
+    "react-native-gesture-handler": "^2.29.1",
+    "react-native-reanimated": "^4.1.5",
+    "react-native-safe-area-context": "^5.6.2",
+    "react-native-screens": "^4.18.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^30.0.0",
+    "@types/react": "^19.2.6",
+    "@types/react-native": "^0.72.8",
+    "fast-check": "^4.3.0",
+    "jest": "^30.2.0",
+    "jest-expo": "^54.0.13",
+    "prettier": "^3.6.2",
+    "ts-jest": "^29.4.5",
+    "typescript": "^5.9.3"
+  }
+}
