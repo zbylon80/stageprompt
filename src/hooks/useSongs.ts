@@ -25,7 +25,7 @@ export function useSongs(): UseSongsReturn {
       const loadedSongs = await storageService.loadSongs();
       setSongs(loadedSongs);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nie udało się załadować utworów.';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load songs.';
       setError(errorMessage);
       console.error('Error loading songs:', err);
     } finally {
@@ -40,7 +40,7 @@ export function useSongs(): UseSongsReturn {
       // Reload songs to update the list
       await loadSongs();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nie udało się zapisać utworu.';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save song.';
       setError(errorMessage);
       throw err;
     }
@@ -53,7 +53,7 @@ export function useSongs(): UseSongsReturn {
       // Update local state immediately
       setSongs(prevSongs => prevSongs.filter(song => song.id !== id));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nie udało się usunąć utworu.';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete song.';
       setError(errorMessage);
       throw err;
     }

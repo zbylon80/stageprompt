@@ -12,7 +12,7 @@ const Stack = createStackNavigator<RootStackParamList>();
 function SongEditorScreen() {
   return (
     <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Edytor Utworu - W budowie</Text>
+      <Text style={styles.placeholderText}>Song Editor - Under Construction</Text>
     </View>
   );
 }
@@ -20,7 +20,7 @@ function SongEditorScreen() {
 function SetlistEditorScreen() {
   return (
     <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Edytor Setlisty - W budowie</Text>
+      <Text style={styles.placeholderText}>Setlist Editor - Under Construction</Text>
     </View>
   );
 }
@@ -28,7 +28,7 @@ function SetlistEditorScreen() {
 function PrompterScreen() {
   return (
     <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Teleprompter - W budowie</Text>
+      <Text style={styles.placeholderText}>Teleprompter - Under Construction</Text>
     </View>
   );
 }
@@ -36,7 +36,7 @@ function PrompterScreen() {
 function SettingsScreen() {
   return (
     <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Ustawienia - W budowie</Text>
+      <Text style={styles.placeholderText}>Settings - Under Construction</Text>
     </View>
   );
 }
@@ -59,17 +59,17 @@ export default function App() {
         <Stack.Screen
           name="SongList"
           component={SongListScreen}
-          options={{ title: 'Moje Utwory' }}
+          options={{ title: 'My Songs' }}
         />
         <Stack.Screen
           name="SongEditor"
           component={SongEditorScreen}
-          options={{ title: 'Edycja Utworu' }}
+          options={{ title: 'Edit Song' }}
         />
         <Stack.Screen
           name="SetlistEditor"
           component={SetlistEditorScreen}
-          options={{ title: 'Edycja Setlisty' }}
+          options={{ title: 'Edit Setlist' }}
         />
         <Stack.Screen
           name="Prompter"
@@ -82,7 +82,7 @@ export default function App() {
         <Stack.Screen
           name="Settings"
           component={SettingsScreen}
-          options={{ title: 'Ustawienia' }}
+          options={{ title: 'Settings' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

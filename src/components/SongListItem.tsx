@@ -28,7 +28,7 @@ export function SongListItem({ song, onPress, onAddToSetlist }: SongListItemProp
           </Text>
         )}
         <Text style={styles.info}>
-          {song.lines.length} {song.lines.length === 1 ? 'linijka' : 'linijek'}
+          {song.lines.length} {song.lines.length === 1 ? 'line' : 'lines'}
         </Text>
       </View>
     </TouchableOpacity>

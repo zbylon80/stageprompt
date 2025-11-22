@@ -25,7 +25,7 @@ export function useSetlists(): UseSetlistsReturn {
       const loadedSetlists = await storageService.loadSetlists();
       setSetlists(loadedSetlists);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nie udało się załadować setlist.';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load setlists.';
       setError(errorMessage);
       console.error('Error loading setlists:', err);
     } finally {
@@ -40,7 +40,7 @@ export function useSetlists(): UseSetlistsReturn {
       // Reload setlists to update the list
       await loadSetlists();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nie udało się zapisać setlisty.';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save setlist.';
       setError(errorMessage);
       throw err;
     }
@@ -53,7 +53,7 @@ export function useSetlists(): UseSetlistsReturn {
       // Update local state immediately
       setSetlists(prevSetlists => prevSetlists.filter(setlist => setlist.id !== id));
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Nie udało się usunąć setlisty.';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete setlist.';
       setError(errorMessage);
       throw err;
     }

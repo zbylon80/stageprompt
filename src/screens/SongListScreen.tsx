@@ -43,9 +43,9 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>Brak utworów</Text>
+      <Text style={styles.emptyTitle}>No songs</Text>
       <Text style={styles.emptyText}>
-        Dotknij przycisk + aby utworzyć pierwszy utwór
+        Tap the + button to create your first song
       </Text>
     </View>
   );
@@ -58,7 +58,7 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color="#4a9eff" />
-        <Text style={styles.loadingText}>Ładowanie utworów...</Text>
+        <Text style={styles.loadingText}>Loading songs...</Text>
       </View>
     );
   }
@@ -66,7 +66,7 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
   if (error) {
     return (
       <View style={styles.centerContainer}>
-        <Text style={styles.errorText}>Błąd: {error}</Text>
+        <Text style={styles.errorText}>Error: {error}</Text>
       </View>
     );
   }
