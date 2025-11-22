@@ -1,6 +1,6 @@
 // components/LyricLineEditor.tsx
 
-import React from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LyricLine } from '../types/models';
 
@@ -13,15 +13,36 @@ interface LyricLineEditorProps {
   onSplitLines?: (id: string, lines: string[]) => void;
 }
 
-export function LyricLineEditor({
+export interface LyricLineEditorRef {
+  focus: () => void;
+  measureLayout: (callback: (x: number, y: number, width: number, height: number) => void) => void;
+}
+
+export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorProps>(({
   line,
   index,
   onUpdateText,
   onUpdateTime,
   onDelete,
   onSplitLines,
-}: LyricLineEditorProps) {
+}, ref) => {
   const [timeText, setTimeText] = React.useState(line.timeSeconds.toString());
+  const textInputRef = React.useRef<TextInput>(null);
+  const containerRef = React.useRef<View>(null);
+
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      textInputRef.current?.focus();
+    },
+    measureLayout: (callback: (x: number, y: number, width: number, height: number) => void) => {
+      if (containerRef.current) {
+        containerRef.current.measure((x, y, width, height, pageX, pageY) => {
+          callback(pageX, pageY, width, height);
+        });
+      }
+    },
+  }));
 
   const handleTimeChange = (text: string) => {
     setTimeText(text);
@@ -45,7 +66,7 @@ export function LyricLineEditor({
   };
 
   return (
-    <View style={styles.container}>
+    <View ref={containerRef} style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.lineNumber}>{index + 1}</Text>
         <TouchableOpacity
@@ -58,6 +79,7 @@ export function LyricLineEditor({
       </View>
       
       <TextInput
+        ref={textInputRef}
         style={styles.textInput}
         value={line.text}
         onChangeText={handleTextChange}
@@ -79,7 +101,9 @@ export function LyricLineEditor({
       </View>
     </View>
   );
-}
+});
+
+LyricLineEditor.displayName = 'LyricLineEditor';
 
 const styles = StyleSheet.create({
   container: {

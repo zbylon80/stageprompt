@@ -159,7 +159,12 @@
   - **Property 5: Modyfikacja metadanych aktualizuje utwór**
   - **Validates: Requirements 2.2**
 
-- [ ] 7.4 Dopracowanie nawigacji i scrollowania w edytorze
+- [x] 7.4 Dopracowanie nawigacji i scrollowania w edytorze
+
+
+
+
+
   - Implementacja KeyboardAvoidingView dla uniknięcia zakrywania inputów przez klawiaturę
   - Automatyczne scrollowanie do nowo dodanej linijki
   - Automatyczne fokusowanie na nowej linijce po dodaniu

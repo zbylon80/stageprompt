@@ -1,6 +1,6 @@
 // screens/SongEditorScreen.tsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,12 +10,13 @@ import {
   TouchableOpacity,
   Alert,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
 import { Song, LyricLine } from '../types/models';
-import { LyricLineEditor } from '../components/LyricLineEditor';
+import { LyricLineEditor, LyricLineEditorRef } from '../components/LyricLineEditor';
 import { useSongs } from '../hooks/useSongs';
 import { generateId } from '../utils/idGenerator';
 import { validateSong } from '../utils/validation';
@@ -40,6 +41,10 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
       updatedAt: Date.now(),
     }
   );
+  
+  const scrollViewRef = useRef<ScrollView>(null);
+  const lineRefs = useRef<Map<string, LyricLineEditorRef>>(new Map());
+  const [lastAddedLineId, setLastAddedLineId] = useState<string | null>(null);
 
   // Auto-save with debounce
   useEffect(() => {
@@ -76,11 +81,39 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         ? song.lines[song.lines.length - 1].timeSeconds 
         : 0,
     };
+    setLastAddedLineId(newLine.id);
     setSong((prev) => ({
       ...prev,
       lines: [...prev.lines, newLine],
     }));
   }, [song.lines]);
+
+  // Auto-scroll and auto-focus on newly added line
+  useEffect(() => {
+    if (lastAddedLineId) {
+      // Use setTimeout to ensure the component is rendered
+      const timer = setTimeout(() => {
+        const lineRef = lineRefs.current.get(lastAddedLineId);
+        if (lineRef) {
+          // Focus the input
+          lineRef.focus();
+          
+          // Scroll to the line (only on mobile)
+          if (Platform.OS !== 'web') {
+            lineRef.measureLayout((x, y, width, height) => {
+              scrollViewRef.current?.scrollTo({
+                y: y - 100, // Offset to show some context above
+                animated: true,
+              });
+            });
+          }
+        }
+        setLastAddedLineId(null);
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [lastAddedLineId, song.lines.length]);
 
   const updateLineText = (id: string, text: string) => {
     setSong((prev) => ({
@@ -175,18 +208,10 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
     );
   };
 
-  const Container = Platform.OS === 'web' ? View : ScrollView;
-  const containerProps = Platform.OS === 'web' 
-    ? { style: styles.container }
-    : { 
-        style: styles.scrollContainer,
-        contentContainerStyle: styles.scrollContent,
-        showsVerticalScrollIndicator: true,
-      };
-
-  return (
-    <Container {...containerProps}>
-        <View style={styles.headerContainer}>
+  // Render content based on platform
+  const renderContent = () => (
+    <>
+      <View style={styles.headerContainer}>
         <Text style={styles.label}>Title</Text>
         <TextInput
           style={styles.input}
@@ -220,6 +245,13 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
       {song.lines.map((line, index) => (
         <LyricLineEditor
           key={line.id}
+          ref={(ref) => {
+            if (ref) {
+              lineRefs.current.set(line.id, ref);
+            } else {
+              lineRefs.current.delete(line.id);
+            }
+          }}
           line={line}
           index={index}
           onUpdateText={updateLineText}
@@ -248,7 +280,35 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
           </TouchableOpacity>
         )}
       </View>
-    </Container>
+    </>
+  );
+
+  // Web version - simple scrollable container
+  if (Platform.OS === 'web') {
+    return (
+      <View style={styles.container}>
+        {renderContent()}
+      </View>
+    );
+  }
+
+  // Mobile version - with KeyboardAvoidingView
+  return (
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoidingView}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={true}
+        keyboardShouldPersistTaps="handled"
+      >
+        {renderContent()}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -259,6 +319,10 @@ const styles = StyleSheet.create({
     height: '100vh' as any,
     paddingVertical: 16,
     paddingBottom: 50,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
   },
   scrollContainer: {
     flex: 1,
