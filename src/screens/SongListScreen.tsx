@@ -1,6 +1,6 @@
 // screens/SongListScreen.tsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useFocusEffect } from '@react-navigation/native';
 import { useSongs } from '../hooks/useSongs';
 import { SongListItem } from '../components/SongListItem';
 import { RootStackParamList } from '../types/navigation';
@@ -23,7 +24,14 @@ interface SongListScreenProps {
 }
 
 export function SongListScreen({ navigation }: SongListScreenProps) {
-  const { songs, loading, error } = useSongs();
+  const { songs, loading, error, reload } = useSongs();
+
+  // Reload songs when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      reload();
+    }, [reload])
+  );
 
   const handleSongPress = (song: Song) => {
     navigation.navigate('SongEditor', { song });
@@ -142,7 +150,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 20,
-    bottom: 20,
+    bottom: 80,
     width: 56,
     height: 56,
     borderRadius: 28,

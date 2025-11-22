@@ -2,20 +2,19 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { SongListScreen } from './src/screens/SongListScreen';
+import { SongEditorScreen } from './src/screens/SongEditorScreen';
 import { RootStackParamList } from './src/types/navigation';
+
+// Import CSS for web scrollbar styling
+if (Platform.OS === 'web') {
+  require('./web-styles.css');
+}
 
 const Stack = createStackNavigator<RootStackParamList>();
 
 // Placeholder screens - to be implemented
-function SongEditorScreen() {
-  return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Song Editor - Under Construction</Text>
-    </View>
-  );
-}
 
 function SetlistEditorScreen() {
   return (

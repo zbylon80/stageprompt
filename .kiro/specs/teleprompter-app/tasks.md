@@ -127,7 +127,12 @@
   - Test przypadku brzegowego: pusta lista utworów
   - _Requirements: 1.5_
 
-- [ ] 7. Implementacja ekranu edytora utworu (SongEditorScreen)
+- [x] 7. Implementacja ekranu edytora utworu (SongEditorScreen)
+
+
+
+
+
   - Utworzenie screens/SongEditorScreen.tsx
   - Utworzenie components/LyricLineEditor.tsx
   - Implementacja pól edycji tytułu i wykonawcy
@@ -138,15 +143,19 @@
   - Auto-save przy każdej zmianie
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 7.1 Napisanie testów property dla dodawania linijek
+- [x] 7.1 Napisanie testów property dla dodawania linijek
+
+
   - **Property 3: Dodawanie linijki zwiększa liczbę linijek**
   - **Validates: Requirements 2.3**
 
-- [ ] 7.2 Napisanie testów property dla usuwania linijek
+- [x] 7.2 Napisanie testów property dla usuwania linijek
+
   - **Property 4: Usuwanie linijki zmniejsza liczbę linijek**
   - **Validates: Requirements 2.4**
 
-- [ ] 7.3 Napisanie testów property dla modyfikacji metadanych
+- [x] 7.3 Napisanie testów property dla modyfikacji metadanych
+
   - **Property 5: Modyfikacja metadanych aktualizuje utwór**
   - **Validates: Requirements 2.2**
 
