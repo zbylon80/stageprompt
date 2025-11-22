@@ -2,24 +2,50 @@
 
 ## Przegląd
 
-StagePrompt to mobilna aplikacja React Native + TypeScript zaprojektowana dla tabletów z Androidem, umożliwiająca wyświetlanie tekstów piosenek z precyzyjnie zsynchronizowanym przewijaniem. Kluczową innowacją jest algorytm płynnego przewijania oparty na interpolacji liniowej między linijkami z przypisanymi czasami, co zapewnia naturalne i przewidywalne przewijanie tekstu.
+StagePrompt to cross-platform aplikacja React Native + TypeScript zaprojektowana z myślą o dwóch środowiskach użytkowania:
+1. **Komputer (Web/Desktop)** - wygodna edycja utworów, setlist i timingów na dużym ekranie
+2. **Tablet/Telefon (Android/iOS)** - wyświetlanie tekstów podczas występów z precyzyjnie zsynchronizowanym przewijaniem
+
+Kluczową innowacją jest algorytm płynnego przewijania oparty na interpolacji liniowej między linijkami z przypisanymi czasami, co zapewnia naturalne i przewidywalne przewijanie tekstu. Workflow zakłada pracę przygotowawczą na komputerze (edycja, timing) i eksport gotowych danych do urządzenia mobilnego używanego podczas występów.
 
 ### Kluczowe Cechy Techniczne
 
 - **React Native + TypeScript** - cross-platform development z silnym typowaniem
-- **Expo** - szybki development i możliwość testowania na web/desktop
-- **AsyncStorage** - lokalne przechowywanie danych (JSON)
+- **Expo** - natywne wsparcie dla web, desktop i mobile
+- **AsyncStorage** - lokalne przechowywanie danych (JSON) na wszystkich platformach
 - **React Navigation** - nawigacja między ekranami
-- **Reanimated 2** - płynne animacje przewijania (60 FPS)
-- **react-native-keyevent** - obsługa kontrolerów Bluetooth działających jak klawiatura
+- **Reanimated 2** - płynne animacje przewijania (60 FPS) na mobile
+- **react-native-keyevent** - obsługa kontrolerów Bluetooth działających jak klawiatura (Android)
+- **Export/Import** - pełna synchronizacja danych między urządzeniami
 
 ### Architektura Wysokiego Poziomu
 
-Aplikacja wykorzystuje architekturę warstwową:
-- **Warstwa UI** - komponenty React Native (ekrany, komponenty)
+Aplikacja wykorzystuje architekturę warstwową z pełnym wsparciem cross-platform:
+- **Warstwa UI** - komponenty React Native (ekrany, komponenty) - responsywne dla web i mobile
 - **Warstwa Logiki Biznesowej** - hooks i serwisy (scroll algorithm, timing)
-- **Warstwa Danych** - storage service (AsyncStorage wrapper)
-- **Warstwa Integracji** - key event handling, platform detection
+- **Warstwa Danych** - storage service (AsyncStorage wrapper) - kompatybilny z web (localStorage) i mobile
+- **Warstwa Integracji** - key event handling, platform detection, export/import
+
+### Workflow Cross-Platform
+
+```mermaid
+graph LR
+    A[Komputer - Edycja] --> B[Eksport JSON]
+    B --> C[Transfer pliku]
+    C --> D[Tablet - Import]
+    D --> E[Występ z Prompterem]
+    E --> F[Opcjonalnie: Eksport zmian]
+    F --> A
+```
+
+**Typowy przepływ pracy:**
+1. Użytkownik pracuje na komputerze (przeglądarka lub Expo desktop)
+2. Tworzy utwory, edytuje teksty, nagrywa timings
+3. Organizuje setlisty
+4. Eksportuje wszystko do pliku JSON
+5. Przenosi plik na tablet (email, cloud, USB)
+6. Importuje dane w aplikacji mobilnej
+7. Używa tabletu jako teleprompter podczas występu
 
 ## Architektura
 
@@ -636,6 +662,18 @@ export function generateId(): string {
 
 **Validates: Requirements 12.2, 12.4**
 
+### Property 30: Cross-platform kompatybilność danych
+
+*Dla dowolnego* zestawu utworów i setlist wyeksportowanych na jednej platformie (web/desktop), import na innej platformie (mobile) powinien zachować wszystkie dane bez utraty informacji.
+
+**Validates: Requirements 13.4, 13.5**
+
+### Property 31: Pełna funkcjonalność edycji na komputerze
+
+*Dla dowolnej* operacji edycji (tworzenie utworu, edycja linijek, nagrywanie timingu, zarządzanie setlistami), wykonanie jej na platformie web/desktop powinno działać identycznie jak na mobile.
+
+**Validates: Requirements 13.1, 13.2**
+
 ## Obsługa Błędów
 
 ### Strategie Obsługi Błędów
@@ -932,19 +970,25 @@ npm test -- --watch
 
 ## Platform-Specific Considerations
 
-### Android (Primary Target)
+### Web/Desktop (Środowisko Edycji - Primary)
 
-- **Bluetooth/Key Events:** Pełne wsparcie przez `react-native-keyevent`
+- **Cel:** Wygodna edycja utworów na dużym ekranie
+- **Input:** Klawiatura + mysz - pełne wsparcie
+- **Storage:** AsyncStorage używa localStorage (persystencja w przeglądarce)
+- **Export/Import:** Pełne wsparcie - download/upload plików JSON
+- **Prompter:** Funkcjonalny do testowania, ale nie główny use case
+- **Bluetooth:** Niedostępne - graceful degradation
+- **Performance:** Standardowa wydajność przeglądarki
+
+### Android/iOS (Środowisko Występu)
+
+- **Cel:** Wyświetlanie tekstów podczas występów
+- **Bluetooth/Key Events:** Pełne wsparcie przez `react-native-keyevent` (Android)
 - **Storage:** AsyncStorage działa natywnie
 - **Performance:** Reanimated 2 zapewnia 60 FPS na większości tabletów
 - **Fullscreen:** `react-native-immersive-mode` dla prawdziwego fullscreen
-
-### Web/Desktop (Development)
-
-- **Bluetooth:** Niedostępne - graceful degradation
-- **Key Events:** Standardowe keyboard events jako fallback
-- **Storage:** AsyncStorage używa localStorage
-- **Touch Events:** Automatycznie mapowane na mouse events
+- **Export/Import:** Pełne wsparcie - share/receive plików
+- **Touch Events:** Natywne wsparcie
 
 ### Platform Detection
 
@@ -955,9 +999,11 @@ import { Platform } from 'react-native';
 
 export const isWeb = Platform.OS === 'web';
 export const isAndroid = Platform.OS === 'android';
+export const isIOS = Platform.OS === 'ios';
+export const isMobile = isAndroid || isIOS;
 
 export const supportsKeyEvents = isAndroid || isWeb;
-export const supportsBluetooth = isAndroid;
+export const supportsBluetooth = isAndroid; // iOS może wymagać dodatkowej konfiguracji
 
 export function getStorageImplementation() {
   if (isWeb) {
@@ -965,7 +1011,25 @@ export function getStorageImplementation() {
   }
   return AsyncStorage;
 }
+
+// Określa czy to środowisko edycji czy występu
+export const isEditingEnvironment = isWeb;
+export const isPerformanceEnvironment = isMobile;
 ```
+
+### UI Adaptacje Cross-Platform
+
+**Desktop/Web:**
+- Większe przyciski i kontrolki (optymalizacja pod mysz)
+- Skróty klawiszowe dla szybkiej edycji
+- Drag & drop plików dla importu
+- Szersze layouty wykorzystujące przestrzeń ekranu
+
+**Mobile:**
+- Touch-friendly kontrolki (większe touch targets)
+- Swipe gestures
+- Fullscreen prompter bez rozpraszaczy
+- Optymalizacja pod pionową i poziomą orientację
 
 ## Performance Considerations
 
@@ -989,6 +1053,86 @@ export function getStorageImplementation() {
 - Index arrays dla szybkiego listowania
 - Compression dla dużych tekstów (opcjonalnie)
 
+## Cross-Platform Workflow - Szczegóły Implementacji
+
+### Eksport na Komputerze (Web)
+
+```typescript
+// W SettingsScreen - przycisk Export
+const handleExport = async () => {
+  const jsonData = await exportImportService.exportAllData(songs, setlists);
+  
+  // Web: trigger download
+  if (Platform.OS === 'web') {
+    const blob = new Blob([jsonData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `stageprompt-backup-${Date.now()}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+};
+```
+
+### Import na Mobile
+
+```typescript
+// W SettingsScreen - przycisk Import
+const handleImport = async () => {
+  // Mobile: użyj DocumentPicker
+  if (Platform.OS !== 'web') {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: 'application/json',
+    });
+    
+    if (result.type === 'success') {
+      const fileContent = await FileSystem.readAsStringAsync(result.uri);
+      const { songs, setlists } = await exportImportService.importData(
+        fileContent,
+        'merge' // lub 'replace'
+      );
+      // Zapisz do storage
+    }
+  }
+};
+```
+
+### Transfer Danych - Opcje dla Użytkownika
+
+1. **Email** - wyeksportuj i wyślij do siebie
+2. **Cloud Storage** - Google Drive, Dropbox, iCloud
+3. **USB/Cable** - bezpośredni transfer
+4. **QR Code** (przyszła funkcja) - dla małych zestawów danych
+5. **Local Network** (przyszła funkcja) - bezpośrednia synchronizacja
+
+### Walidacja Kompatybilności
+
+```typescript
+interface ExportData {
+  version: string;        // Format version dla backward compatibility
+  platform: string;       // 'web' | 'android' | 'ios'
+  exportDate: number;
+  appVersion: string;     // Wersja aplikacji
+  songs: Song[];
+  setlists: Setlist[];
+}
+
+export function validateCrossPlatformCompatibility(data: ExportData): boolean {
+  // Sprawdź wersję formatu
+  if (!isVersionCompatible(data.version)) {
+    return false;
+  }
+  
+  // Sprawdź strukturę danych
+  if (!validateDataStructure(data)) {
+    return false;
+  }
+  
+  return true;
+}
+```
+
 ## Future Enhancements
 
 ### Faza 2 (Post-MVP)
@@ -1003,10 +1147,12 @@ export function getStorageImplementation() {
    - MIDI controller support
    - Custom protocol dla dedykowanych kontrolerów
 
-3. **Cloud Sync**
+3. **Cloud Sync & Automatyczna Synchronizacja**
    - Firebase/Supabase backend
-   - Multi-device sync
+   - Automatyczna synchronizacja między komputerem a tabletem
+   - Real-time updates
    - Backup w chmurze
+   - Conflict resolution przy jednoczesnej edycji
 
 4. **Advanced Features**
    - Mirror mode (odbicie tekstu)

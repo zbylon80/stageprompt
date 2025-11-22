@@ -2,7 +2,12 @@
 
 ## Wprowadzenie
 
-StagePrompt to aplikacja teleprompter na tablet z Androidem, zbudowana w React Native + TypeScript, która wyświetla tekst piosenek z płynnym przewijaniem zsynchronizowanym z czasem. Aplikacja umożliwia zarządzanie utworami i setlistami, precyzyjne ustawienie timingu dla każdej linijki tekstu oraz sterowanie zewnętrznym kontrolerem Bluetooth (pilot/footswitch). Dodatkowo aplikacja powinna być testowalna na komputerze podczas developmentu.
+StagePrompt to cross-platform aplikacja teleprompter zbudowana w React Native + TypeScript, zaprojektowana z myślą o dwóch środowiskach użytkowania:
+
+1. **Komputer (Web/Desktop)** - środowisko do wygodnej pracy nad utworami: edycja tekstów, nagrywanie timingów, organizacja setlist na dużym ekranie z klawiaturą i myszą
+2. **Tablet/Telefon (Android/iOS)** - środowisko do występów: wyświetlanie tekstów z płynnym przewijaniem zsynchronizowanym z czasem, sterowanie kontrolerem Bluetooth
+
+Workflow zakłada, że użytkownik przygotowuje materiały na komputerze, eksportuje je do pliku JSON, a następnie importuje na urządzeniu mobilnym używanym podczas występów. Aplikacja zapewnia pełną kompatybilność danych między platformami oraz zachowuje wszystkie funkcjonalności w obu środowiskach.
 
 ## Słownik
 
@@ -163,3 +168,15 @@ StagePrompt to aplikacja teleprompter na tablet z Androidem, zbudowana w React N
 3. WHEN dane importu są poprawne THEN System SHALL scalić lub zastąpić istniejące dane na podstawie preferencji użytkownika
 4. WHEN dane importu są niepoprawne THEN System SHALL wyświetlić komunikat błędu i zachować istniejące dane
 5. WHEN eksport się kończy THEN System SHALL zapewnić opcje udostępnienia pliku przez email lub zapisania do zewnętrznego storage
+
+### Wymaganie 13
+
+**User Story:** Jako użytkownik, chcę pracować nad utworami na komputerze i eksportować je do aplikacji mobilnej, aby wygodnie edytować na dużym ekranie i używać na tablecie podczas występów.
+
+#### Kryteria Akceptacji
+
+1. WHEN aplikacja działa na komputerze THEN System SHALL zapewnić pełną funkcjonalność edycji utworów i setlist
+2. WHEN użytkownik pracuje na komputerze THEN System SHALL umożliwić wygodną edycję z użyciem klawiatury i myszy
+3. WHEN użytkownik kończy pracę na komputerze THEN System SHALL umożliwić eksport danych do pliku
+4. WHEN użytkownik importuje dane na urządzeniu mobilnym THEN System SHALL zachować wszystkie utwory, setlisty i timings
+5. WHEN aplikacja działa na różnych platformach THEN System SHALL zachować pełną kompatybilność danych i funkcjonalności

@@ -305,19 +305,24 @@
   - **Property 19: Czyszczenie mapowania usuwa powiązanie**
   - **Validates: Requirements 8.2, 8.3, 8.4, 8.5**
 
-- [ ] 19. Implementacja eksportu i importu danych
+- [ ] 19. Implementacja eksportu i importu danych z cross-platform support
   - Utworzenie services/exportImportService.ts
   - Implementacja exportAllData (serializacja do JSON)
   - Implementacja validateImportData (walidacja struktury)
   - Implementacja importData (merge/replace modes)
   - Integracja z SettingsScreen (przyciski Export/Import)
-  - Implementacja file picker dla importu
-  - Implementacja share dialog dla eksportu
-  - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
+  - Implementacja file picker dla importu (web: input file, mobile: DocumentPicker)
+  - Implementacja download/share dla eksportu (web: download, mobile: share dialog)
+  - Zapewnienie kompatybilności formatów między platformami
+  - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 13.3, 13.4_
 
 - [ ] 19.1 Napisanie testów property dla eksportu/importu
   - **Property 28: Round-trip eksportu i importu**
   - **Validates: Requirements 12.1, 12.3**
+
+- [ ] 19.2 Napisanie testów property dla cross-platform kompatybilności
+  - **Property 30: Cross-platform kompatybilność danych**
+  - **Validates: Requirements 13.4, 13.5**
 
 - [ ] 20. Implementacja nawigacji aplikacji
   - Konfiguracja React Navigation (Stack Navigator)
@@ -359,37 +364,55 @@
   - Throttling dla scroll calculations
   - _Requirements: 5.3_
 
-- [ ] 26. Testowanie cross-platform
+- [ ] 26. Optymalizacja UI dla różnych platform
+  - Implementacja responsywnych layoutów (szersze na desktop)
+  - Dodanie skrótów klawiszowych dla edycji na web/desktop
+  - Optymalizacja touch targets dla mobile
+  - Implementacja drag & drop plików dla importu na web
+  - Testowanie orientacji pionowej i poziomej na mobile
+  - _Requirements: 13.1, 13.2_
+
+- [ ] 26.1 Napisanie testów property dla funkcjonalności edycji cross-platform
+  - **Property 31: Pełna funkcjonalność edycji na komputerze**
+  - **Validates: Requirements 13.1, 13.2**
+
+- [ ] 27. Testowanie cross-platform workflow
+  - Testowanie pełnego workflow: edycja na web → eksport → import na mobile
   - Testowanie na Expo Go (Android)
   - Testowanie w przeglądarce (web mode)
   - Weryfikacja graceful degradation (brak Bluetooth na web)
   - Weryfikacja keyboard events na web
   - Weryfikacja mouse events jako touch na web
-  - _Requirements: 11.1, 11.2, 11.3, 11.4_
+  - Testowanie transferu danych między platformami
+  - _Requirements: 11.1, 11.2, 11.3, 11.4, 13.1, 13.2, 13.3, 13.4, 13.5_
 
-- [ ] 27. Dodanie przykładowych danych (opcjonalne)
+- [ ] 28. Dodanie przykładowych danych (opcjonalne)
   - Utworzenie utils/sampleData.ts
   - Generowanie przykładowych utworów z timingami
   - Generowanie przykładowej setlisty
   - Opcja załadowania sample data przy pierwszym uruchomieniu
   - _Requirements: 1.5_
 
-- [ ] 28. Napisanie testów integracyjnych dla głównych przepływów
+- [ ] 29. Napisanie testów integracyjnych dla głównych przepływów
   - Test przepływu: utworzenie utworu → edycja → dodanie do setlisty → odtwarzanie w prompterze
   - Test przepływu: import danych → weryfikacja → eksport
   - Test przepływu: mapowanie klawiszy → użycie w prompterze
+  - Test przepływu cross-platform: edycja na web → eksport → import na mobile → występ
 
-- [ ] 29. Finalne testowanie i debugging
+- [ ] 30. Finalne testowanie i debugging
   - Przejście przez wszystkie user stories
   - Weryfikacja wszystkich acceptance criteria
   - Testowanie na fizycznym urządzeniu Android
   - Testowanie z rzeczywistym kontrolerem Bluetooth
+  - Testowanie workflow web → mobile
   - Fix bugów i edge cases
   - _Requirements: All_
 
-- [ ] 30. Dokumentacja i README
+- [ ] 31. Dokumentacja i README
   - Utworzenie README.md z instrukcjami instalacji
+  - Dokumentacja workflow: praca na komputerze → eksport → import na tablet
   - Dokumentacja API dla głównych serwisów
-  - Instrukcje użytkowania aplikacji
+  - Instrukcje użytkowania aplikacji (web i mobile)
   - Troubleshooting guide
   - Lista kompatybilnych kontrolerów Bluetooth
+  - Instrukcje transferu danych między urządzeniami
