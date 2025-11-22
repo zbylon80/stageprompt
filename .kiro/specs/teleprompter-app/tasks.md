@@ -78,13 +78,20 @@
   - Utworzenie hooks/useKeyMapping.ts (load, save key mappings)
   - _Requirements: 1.1, 4.1, 9.5, 8.3, 8.5_
 
-- [ ] 5. Implementacja algorytmu przewijania
+- [x] 5. Implementacja algorytmu przewijania
+
+
+
+
+
   - Utworzenie services/scrollAlgorithm.ts
   - Implementacja funkcji calculateScrollY z interpolacją liniową
   - Obsługa przypadków brzegowych (przed pierwszą linijką, po ostatniej)
   - _Requirements: 5.2, 5.4, 5.5, 5.6_
 
-- [ ] 5.1 Napisanie testów property dla algorytmu przewijania
+- [x] 5.1 Napisanie testów property dla algorytmu przewijania
+
+
   - **Property 10: Algorytm przewijania - interpolacja liniowa**
   - **Validates: Requirements 5.6**
 
