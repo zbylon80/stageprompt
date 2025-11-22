@@ -29,7 +29,12 @@
   - **Property 29: Walidacja odrzuca niepoprawne dane importu**
   - **Validates: Requirements 12.2, 12.4**
 
-- [ ] 3. Implementacja storage service
+- [x] 3. Implementacja storage service
+
+
+
+
+
   - Utworzenie services/storageService.ts z interfejsem StorageService
   - Implementacja metod save/load/delete dla Songs
   - Implementacja metod save/load/delete dla Setlists
@@ -37,19 +42,27 @@
   - Obsługa błędów storage z user-friendly komunikatami
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5_
 
-- [ ] 3.1 Napisanie testów property dla persystencji utworów
+- [x] 3.1 Napisanie testów property dla persystencji utworów
+
+
   - **Property 22: Round-trip persystencji utworu**
   - **Validates: Requirements 10.1, 10.3**
 
-- [ ] 3.2 Napisanie testów property dla persystencji setlist
+- [x] 3.2 Napisanie testów property dla persystencji setlist
+
+
   - **Property 23: Round-trip persystencji setlisty**
   - **Validates: Requirements 10.2, 10.3**
 
-- [ ] 3.3 Napisanie testów property dla błędów storage
+- [x] 3.3 Napisanie testów property dla błędów storage
+
+
   - **Property 24: Błąd storage nie zmienia stanu w pamięci**
   - **Validates: Requirements 10.4**
 
-- [ ] 3.4 Napisanie testów property dla usuwania danych
+- [x] 3.4 Napisanie testów property dla usuwania danych
+
+
   - **Property 25: Usunięcie usuwa dane ze storage**
   - **Validates: Requirements 10.5**
 
