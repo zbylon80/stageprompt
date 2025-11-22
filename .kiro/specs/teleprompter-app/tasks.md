@@ -66,7 +66,12 @@
   - **Property 25: Usunięcie usuwa dane ze storage**
   - **Validates: Requirements 10.5**
 
-- [ ] 4. Implementacja custom hooks dla zarządzania danymi
+- [x] 4. Implementacja custom hooks dla zarządzania danymi
+
+
+
+
+
   - Utworzenie hooks/useSongs.ts (load, save, delete songs)
   - Utworzenie hooks/useSetlists.ts (load, save, delete setlists)
   - Utworzenie hooks/useSettings.ts (load, save settings)
