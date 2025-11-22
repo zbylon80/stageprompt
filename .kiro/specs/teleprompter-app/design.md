@@ -6,7 +6,7 @@ StagePrompt to cross-platform aplikacja React Native + TypeScript zaprojektowana
 1. **Komputer (Web/Desktop)** - wygodna edycja utworów, setlist i timingów na dużym ekranie
 2. **Tablet/Telefon (Android/iOS)** - wyświetlanie tekstów podczas występów z precyzyjnie zsynchronizowanym przewijaniem
 
-Kluczową innowacją jest algorytm płynnego przewijania oparty na interpolacji liniowej między linijkami z przypisanymi czasami, co zapewnia naturalne i przewidywalne przewijanie tekstu. Workflow zakłada pracę przygotowawczą na komputerze (edycja, timing) i eksport gotowych danych do urządzenia mobilnego używanego podczas występów.
+Kluczową innowacją jest algorytm płynnego przewijania oparty na interpolacji liniowej między linijkami z przypisanymi czasami, co zapewnia naturalne i przewidywalne przewijanie tekstu. Workflow zakłada pracę przygotowawczą na komputerze (edycja, ręczne ustawianie timingów) i eksport gotowych danych do urządzenia mobilnego używanego podczas występów.
 
 ### Kluczowe Cechy Techniczne
 
@@ -40,7 +40,7 @@ graph LR
 
 **Typowy przepływ pracy:**
 1. Użytkownik pracuje na komputerze (przeglądarka lub Expo desktop)
-2. Tworzy utwory, edytuje teksty, nagrywa timings
+2. Tworzy utwory, edytuje teksty, ręcznie ustawia timings dla linijek
 3. Organizuje setlisty
 4. Eksportuje wszystko do pliku JSON
 5. Przenosi plik na tablet (email, cloud, USB)
@@ -175,24 +175,19 @@ interface SongListScreenProps {
 **Odpowiedzialność:**
 - Edycja metadanych utworu (tytuł, artysta)
 - Zarządzanie linijkami tekstu
-- Tryb nagrywania timingu
+- Ręczne ustawianie timingów dla linijek
 - Walidacja danych
 
 **Stan Lokalny:**
 ```typescript
 interface EditorState {
   song: Song;
-  isRecording: boolean;
-  recordingStartTime: number;
-  currentRecordingTime: number;
 }
 ```
 
 **Komponenty:**
 - Header z polami tytuł/artysta
-- `FlatList` z `LyricLineEditor`
-- Recording controls (start/stop/reset)
-- Timer display podczas nagrywania
+- `FlatList` z `LyricLineEditor` (każda linijka ma pole do wprowadzenia czasu)
 
 #### 3. SetlistEditorScreen
 
@@ -1154,7 +1149,13 @@ export function validateCrossPlatformCompatibility(data: ExportData): boolean {
    - Backup w chmurze
    - Conflict resolution przy jednoczesnej edycji
 
-4. **Advanced Features**
+4. **Tryb Nagrywania Timingu**
+   - Real-time timing recording z stoperem
+   - Przycisk "Ustaw Czas" przy każdej linijce podczas nagrywania
+   - Automatyczne przypisywanie czasów podczas odtwarzania muzyki
+   - Szybsze workflow dla użytkowników z dużą ilością utworów
+
+5. **Advanced Features**
    - Mirror mode (odbicie tekstu)
    - Multiple anchor points
    - Variable scroll speed

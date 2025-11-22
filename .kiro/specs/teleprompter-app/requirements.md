@@ -4,7 +4,7 @@
 
 StagePrompt to cross-platform aplikacja teleprompter zbudowana w React Native + TypeScript, zaprojektowana z myślą o dwóch środowiskach użytkowania:
 
-1. **Komputer (Web/Desktop)** - środowisko do wygodnej pracy nad utworami: edycja tekstów, nagrywanie timingów, organizacja setlist na dużym ekranie z klawiaturą i myszą
+1. **Komputer (Web/Desktop)** - środowisko do wygodnej pracy nad utworami: edycja tekstów, ręczne ustawianie timingów, organizacja setlist na dużym ekranie z klawiaturą i myszą
 2. **Tablet/Telefon (Android/iOS)** - środowisko do występów: wyświetlanie tekstów z płynnym przewijaniem zsynchronizowanym z czasem, sterowanie kontrolerem Bluetooth
 
 Workflow zakłada, że użytkownik przygotowuje materiały na komputerze, eksportuje je do pliku JSON, a następnie importuje na urządzeniu mobilnym używanym podczas występów. Aplikacja zapewnia pełną kompatybilność danych między platformami oraz zachowuje wszystkie funkcjonalności w obu środowiskach.
@@ -17,7 +17,6 @@ Workflow zakłada, że użytkownik przygotowuje materiały na komputerze, ekspor
 - **Setlist**: Lista utworów w określonej kolejności do wykonania podczas występu
 - **AnchorY**: Punkt odniesienia na ekranie (np. 40% wysokości), przez który przechodzą linijki tekstu
 - **Kontroler Zewnętrzny**: Zewnętrzne urządzenie Bluetooth (pilot lub footswitch) działające jak klawiatura
-- **Tryb Nagrywania Timingu**: Tryb edytora umożliwiający nagrywanie czasów dla linijek w czasie rzeczywistym
 - **ScrollY**: Pozycja przewijania widoku w pikselach
 - **KeyCode**: Kod klawisza z urządzenia wejściowego
 - **System**: Aplikacja StagePrompt
@@ -49,18 +48,6 @@ Workflow zakłada, że użytkownik przygotowuje materiały na komputerze, ekspor
 5. WHEN użytkownik ręcznie wprowadza wartość czasu dla linijki THEN System SHALL zwalidować i zapisać wartość timeSeconds dla tego LyricLine
 
 ### Wymaganie 3
-
-**User Story:** Jako użytkownik, chcę nagrywać timing linijek w czasie rzeczywistym, aby szybko i precyzyjnie zsynchronizować tekst z muzyką.
-
-#### Kryteria Akceptacji
-
-1. WHEN użytkownik aktywuje tryb nagrywania timingu THEN System SHALL uruchomić stoper od zera sekund
-2. WHEN użytkownik dotyka "Ustaw Czas" obok linijki podczas nagrywania THEN System SHALL przypisać aktualny czas stopera do właściwości timeSeconds tej linijki
-3. WHEN nagrywanie timingu jest aktywne THEN System SHALL wyświetlać aktualny upłynięty czas w widocznym miejscu
-4. WHEN użytkownik zatrzymuje nagrywanie timingu THEN System SHALL zachować wszystkie nagrane czasy i wrócić do normalnego trybu edycji
-5. WHEN użytkownik resetuje nagrywanie timingu THEN System SHALL ustawić stoper z powrotem na zero bez modyfikowania istniejących czasów linijek
-
-### Wymaganie 4
 
 **User Story:** Jako użytkownik, chcę tworzyć i zarządzać setlistami, aby organizować utwory w kolejności występu.
 
