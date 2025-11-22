@@ -95,7 +95,12 @@
   - **Property 10: Algorytm przewijania - interpolacja liniowa**
   - **Validates: Requirements 5.6**
 
-- [ ] 6. Implementacja ekranu listy utworów (SongListScreen)
+- [x] 6. Implementacja ekranu listy utworów (SongListScreen)
+
+
+
+
+
   - Utworzenie screens/SongListScreen.tsx
   - Utworzenie components/SongListItem.tsx
   - Implementacja FlatList z wyświetlaniem utworów (tytuł, artysta)
@@ -104,15 +109,21 @@
   - Nawigacja do edytora po kliknięciu utworu
   - _Requirements: 1.1, 1.2, 1.3, 1.5_
 
-- [ ] 6.1 Napisanie testów property dla wyświetlania listy
+- [x] 6.1 Napisanie testów property dla wyświetlania listy
+
+
   - **Property 1: Lista utworów wyświetla wszystkie zapisane utwory**
   - **Validates: Requirements 1.1**
 
-- [ ] 6.2 Napisanie testów property dla nawigacji
+- [x] 6.2 Napisanie testów property dla nawigacji
+
+
   - **Property 2: Nawigacja do edytora przekazuje poprawny utwór**
   - **Validates: Requirements 1.2**
 
-- [ ] 6.3 Napisanie testu unit dla empty state
+- [x] 6.3 Napisanie testu unit dla empty state
+
+
   - Test przypadku brzegowego: pusta lista utworów
   - _Requirements: 1.5_
 
