@@ -220,7 +220,12 @@
   - Screenshots: editor-empty.png, editor-with-lyrics.png
   - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
 
-- [ ] 11. Checkpoint - Weryfikacja testów E2E dla utworów
+- [x] 11. Checkpoint - Weryfikacja testów E2E dla utworów
+
+
+
+
+
   - Przejście przez test case'y TC-001 do TC-005
   - Wykonanie każdego test case'a manualnie przez MCP Playwright
   - Weryfikacja że wszystkie funkcje działają zgodnie z wymaganiami
