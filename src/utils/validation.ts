@@ -1,6 +1,6 @@
 // utils/validation.ts
 
-import { Song, LyricLine, Setlist, AppSettings, KeyMapping } from '../types/models';
+import { Song, LyricLine, Setlist, AppSettings, KeyMapping, SongSection, SectionType } from '../types/models';
 
 export function validateSong(song: Partial<Song>): string[] {
   const errors: string[] = [];
@@ -106,6 +106,42 @@ export function validateKeyMapping(mapping: Partial<KeyMapping>): string[] {
 
   if (mapping.pause !== undefined && typeof mapping.pause !== 'number') {
     errors.push('pause must be a number.');
+  }
+
+  return errors;
+}
+
+export function validateSection(section: Partial<SongSection>): string[] {
+  const errors: string[] = [];
+
+  // Validate section type
+  if (!section.type) {
+    errors.push('Section type is required');
+  } else {
+    const validTypes: SectionType[] = ['verse', 'chorus', 'bridge', 'intro', 'outro', 'instrumental', 'custom'];
+    if (!validTypes.includes(section.type)) {
+      errors.push('Invalid section type');
+    }
+  }
+
+  // Validate number if provided
+  if (section.number !== undefined) {
+    if (typeof section.number !== 'number') {
+      errors.push('Section number must be a number');
+    } else if (section.number < 1) {
+      errors.push('Section number must be at least 1');
+    } else if (!Number.isInteger(section.number)) {
+      errors.push('Section number must be an integer');
+    }
+  }
+
+  // Validate label if provided
+  if (section.label !== undefined && section.label !== null) {
+    if (typeof section.label !== 'string') {
+      errors.push('Section label must be a string');
+    } else if (section.label.trim() === '') {
+      errors.push('Section label cannot be empty');
+    }
   }
 
   return errors;

@@ -349,7 +349,12 @@
   - Zapewnienie kompatybilności wstecznej z istniejącymi utworami
   - _Feature: Song Sections_
 
-- [ ] 14.2. Utworzenie utilities dla sekcji
+- [x] 14.2. Utworzenie utilities dla sekcji
+
+
+
+
+
   - Utworzenie `utils/sectionLabels.ts`
   - Implementacja `getSectionLabel()` - zwraca etykietę dla sekcji
   - Implementacja `getNextVerseNumber()` - oblicza następny numer zwrotki
@@ -357,7 +362,12 @@
   - Dodanie `validateSection()` do `utils/validation.ts`
   - _Feature: Song Sections_
 
-- [ ] 14.3. Komponent SectionMarker
+- [x] 14.3. Komponent SectionMarker
+
+
+
+
+
   - Utworzenie `components/SectionMarker.tsx`
   - Implementacja wyświetlania kolorowego badge'a z etykietą
   - Wsparcie dla różnych rozmiarów (small, medium, large)
