@@ -374,7 +374,11 @@
   - Opcjonalna funkcja `onEdit` dla trybu edycji
   - _Feature: Song Sections_
 
-- [ ] 14.4. Komponent SectionPicker
+- [x] 14.4. Komponent SectionPicker
+
+
+
+
   - Utworzenie `components/SectionPicker.tsx`
   - Implementacja dropdown z typami sekcji (Verse, Chorus, Bridge, Intro, Outro, Instrumental, Custom)
   - Automatyczna numeracja dla zwrotek
