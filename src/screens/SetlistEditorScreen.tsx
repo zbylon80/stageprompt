@@ -7,10 +7,10 @@ import {
   TextInput,
   StyleSheet,
   TouchableOpacity,
-  Alert,
   ActivityIndicator,
   Platform,
   FlatList,
+  ScrollView,
   useWindowDimensions,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
@@ -22,6 +22,7 @@ import { useSongs } from '../hooks/useSongs';
 import { generateId } from '../utils/idGenerator';
 import { SongListItem } from '../components/SongListItem';
 import { Toast } from '../components/Toast';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 
 // Conditional import for drag and drop (only on mobile)
 let DraggableFlatList: any = null;
@@ -60,6 +61,7 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Determine if we should show split view (wider screens)
   const useSplitView = width >= 768;
@@ -139,41 +141,25 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
 
   const handleDeleteSetlist = () => {
     if (!setlist) return;
-
-    const confirmMessage = `Are you sure you want to delete "${name}"?`;
-    
-    if (Platform.OS === 'web') {
-      if (confirm(confirmMessage)) {
-        performDelete();
-      }
-    } else {
-      Alert.alert(
-        'Delete Setlist',
-        confirmMessage,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: performDelete,
-          },
-        ]
-      );
-    }
+    setShowDeleteDialog(true);
   };
 
-  const performDelete = async () => {
+  const handleConfirmDelete = async () => {
+    setShowDeleteDialog(false);
     if (!setlist) return;
 
     try {
       const setlistId = setlist.id;
       await deleteSetlist(setlistId);
-      // Navigate after successful delete
       navigation.goBack();
     } catch (error) {
       console.error('Error deleting setlist:', error);
-      Alert.alert('Error', 'Failed to delete setlist');
+      showToast('Failed to delete setlist', 'error');
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
   };
 
   const handleAddSong = async (songId: string) => {
@@ -284,6 +270,9 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
           <View style={styles.songInfo}>
             <Text style={styles.songTitle}>{song.title}</Text>
             {song.artist && <Text style={styles.songArtist}>{song.artist}</Text>}
+            <Text style={styles.songLineCount}>
+              {song.lines.length} {song.lines.length === 1 ? 'line' : 'lines'}
+            </Text>
           </View>
           <TouchableOpacity
             onPress={() => handleRemoveSong(item)}
@@ -371,6 +360,9 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
         <View style={styles.songInfo}>
           <Text style={styles.songTitle}>{song.title}</Text>
           {song.artist && <Text style={styles.songArtist}>{song.artist}</Text>}
+          <Text style={styles.songLineCount}>
+            {song.lines.length} {song.lines.length === 1 ? 'line' : 'lines'}
+          </Text>
         </View>
         <TouchableOpacity
           onPress={() => handleRemoveSong(item)}
@@ -398,9 +390,10 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
             padding: 16,
             marginLeft: 16,
             marginRight: 16,
-            marginTop: 4,
-            marginBottom: 4,
+            marginTop: 6,
+            marginBottom: 6,
             borderRadius: 8,
+            boxShadow: '0px 2px 3.84px rgba(0, 0, 0, 0.25)',
             cursor: isDragging ? 'grabbing' : 'grab',
             borderTop: isDragOver ? '3px solid #4a9eff' : 'none',
             opacity: isDragging ? 0.5 : 1,
@@ -423,99 +416,112 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
   }
 
   // Render songs panel (right side)
-  const renderSongsPanel = () => (
-    <View style={[styles.songsPanel, useSplitView && styles.songsPanelSplit]}>
-      <View style={styles.songsPanelHeader}>
-        <View style={styles.songsPanelHeaderContent}>
-          <View>
-            <Text style={styles.songsPanelTitle}>All Songs</Text>
-            <Text style={styles.songsPanelSubtitle}>
-              {songs.length} {songs.length === 1 ? 'song' : 'songs'}
-            </Text>
-          </View>
+  const renderSongsPanel = () => {
+    const renderSongItem = (song: Song) => {
+      const isInSetlist = songIds.includes(song.id);
+      return (
+        <View key={song.id} style={styles.songsPanelItemWrapper}>
+          <SongListItem song={song} onPress={handleSongPress} />
           <TouchableOpacity
-            style={styles.newSongButton}
-            onPress={handleNewSong}
-            activeOpacity={0.8}
+            style={[
+              styles.addToSetlistButton,
+              isInSetlist && styles.addToSetlistButtonDisabled,
+            ]}
+            onPress={() => handleAddSong(song.id)}
+            disabled={isInSetlist}
           >
-            <Text style={styles.newSongButtonText}>+ New Song</Text>
+            <Text style={styles.addToSetlistButtonText}>
+              {isInSetlist ? '✓' : '+'}
+            </Text>
           </TouchableOpacity>
         </View>
-      </View>
-      <FlatList
-        data={songs}
-        keyExtractor={(song) => song.id}
-        renderItem={({ item: song }) => {
-          const isInSetlist = songIds.includes(song.id);
-          return (
-            <View style={styles.songsPanelItemWrapper}>
-              <SongListItem song={song} onPress={handleSongPress} />
-              <TouchableOpacity
-                style={[
-                  styles.addToSetlistButton,
-                  isInSetlist && styles.addToSetlistButtonDisabled,
-                ]}
-                onPress={() => handleAddSong(song.id)}
-                disabled={isInSetlist}
-              >
-                <Text style={styles.addToSetlistButtonText}>
-                  {isInSetlist ? '✓' : '+'}
-                </Text>
-              </TouchableOpacity>
+      );
+    };
+
+    return (
+      <View style={[styles.songsPanel, useSplitView && styles.songsPanelSplit]}>
+        <View style={styles.songsPanelHeader}>
+          <View style={styles.songsPanelHeaderContent}>
+            <View>
+              <Text style={styles.songsPanelTitle}>All Songs</Text>
+              <Text style={styles.songsPanelSubtitle}>
+                {songs.length} {songs.length === 1 ? 'song' : 'songs'}
+              </Text>
             </View>
-          );
-        }}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No songs available</Text>
-            <Text style={styles.emptySubtext}>Tap "New Song" to create one</Text>
+            <TouchableOpacity
+              style={styles.newSongButton}
+              onPress={handleNewSong}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.newSongButtonText}>+ New Song</Text>
+            </TouchableOpacity>
           </View>
-        }
-      />
-    </View>
-  );
+        </View>
+        {Platform.OS === 'web' ? (
+          <ScrollView 
+            style={styles.songsPanelList}
+            // @ts-ignore - web-only style
+            dataSet={{ scrollable: 'true' }}
+          >
+            {songs.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No songs available</Text>
+                <Text style={styles.emptySubtext}>Tap "New Song" to create one</Text>
+              </View>
+            ) : (
+              songs.map(renderSongItem)
+            )}
+          </ScrollView>
+        ) : (
+          <FlatList
+            data={songs}
+            keyExtractor={(song) => song.id}
+            renderItem={({ item: song }) => renderSongItem(song)}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No songs available</Text>
+                <Text style={styles.emptySubtext}>Tap "New Song" to create one</Text>
+              </View>
+            }
+          />
+        )}
+      </View>
+    );
+  };
 
   // Render setlist content (left side)
   const renderSetlistContent = () => (
     <View style={[styles.setlistContent, useSplitView && styles.setlistContentSplit]}>
       <View style={styles.header}>
-        <TextInput
-          style={styles.nameInput}
-          value={name}
-          onChangeText={setName}
-          placeholder="Enter setlist name..."
-          placeholderTextColor="#666"
-          autoFocus={isNewSetlist}
-        />
-        <View style={styles.headerButtons}>
-          <TouchableOpacity
-            onPress={handleSave}
-            style={styles.saveButton}
-          >
-            <Text style={styles.saveButtonText}>
-              {setlist ? 'Update' : 'Create'}
-            </Text>
-          </TouchableOpacity>
-          {setlist && (
+        <View style={styles.headerRow}>
+          <TextInput
+            style={styles.nameInput}
+            value={name}
+            onChangeText={setName}
+            placeholder="Enter setlist name..."
+            placeholderTextColor="#666"
+            autoFocus={isNewSetlist}
+          />
+          <View style={styles.headerButtons}>
             <TouchableOpacity
-              onPress={handleDeleteSetlist}
-              style={styles.deleteSetlistButton}
+              onPress={handleSave}
+              style={styles.saveButton}
             >
-              <Text style={styles.deleteSetlistButtonText}>Delete</Text>
+              <Text style={styles.saveButtonText}>
+                {setlist ? 'Update' : 'Create'}
+              </Text>
             </TouchableOpacity>
-          )}
+            {setlist && (
+              <TouchableOpacity
+                onPress={handleDeleteSetlist}
+                style={styles.deleteSetlistButton}
+              >
+                <Text style={styles.deleteSetlistButtonText}>Delete</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
-
-      {songIds.length > 0 && (
-        <View style={styles.hintContainer}>
-          <Text style={styles.hintText}>
-            {Platform.OS === 'web' 
-              ? '💡 Drag songs by the ☰ handle to reorder' 
-              : '💡 Long press and drag to reorder'}
-          </Text>
-        </View>
-      )}
 
       {songIds.length === 0 ? (
         <View style={styles.emptyContainer}>
@@ -526,7 +532,15 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
               : 'Tap songs from the panel below'}
           </Text>
         </View>
-      ) : Platform.OS === 'web' || !DraggableFlatList ? (
+      ) : Platform.OS === 'web' ? (
+        <ScrollView 
+          style={styles.listContainer}
+          // @ts-ignore - web-only style
+          dataSet={{ scrollable: 'true' }}
+        >
+          {songIds.map((item, index) => renderSongItemSimple({ item, index }))}
+        </ScrollView>
+      ) : !DraggableFlatList ? (
         <FlatList
           data={songIds}
           renderItem={({ item, index }) => renderSongItemSimple({ item, index })}
@@ -568,6 +582,16 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
         visible={toastVisible}
         onHide={() => setToastVisible(false)}
       />
+      <ConfirmDialog
+        visible={showDeleteDialog}
+        title="Usuń setlistę"
+        message={`Czy na pewno chcesz usunąć "${name || 'tę setlistę'}"?`}
+        confirmText="Usuń"
+        cancelText="Anuluj"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        destructive
+      />
     </GestureHandlerRootView>
   );
 }
@@ -576,6 +600,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1a1a',
+    // @ts-ignore - web-only styles
+    overflow: 'hidden',
+    // @ts-ignore - web-only styles
+    height: '100vh',
   },
   loadingContainer: {
     flex: 1,
@@ -586,25 +614,37 @@ const styles = StyleSheet.create({
   splitViewContainer: {
     flex: 1,
     flexDirection: 'row',
+    // @ts-ignore - web-only styles
+    overflow: 'hidden',
   },
   stackedContainer: {
     flex: 1,
     flexDirection: 'column',
+    // @ts-ignore - web-only styles
+    overflow: 'hidden',
   },
   setlistContent: {
     flex: 1,
+    // @ts-ignore - web-only styles
+    overflow: 'auto',
   },
   setlistContentSplit: {
     flex: 1,
     minWidth: 300,
+    // @ts-ignore - web-only styles
+    overflow: 'auto',
   },
   songsPanel: {
     flex: 1,
     backgroundColor: '#1a1a1a',
+    // @ts-ignore - web-only styles
+    overflow: 'auto',
   },
   songsPanelSplit: {
     flex: 1,
     minWidth: 300,
+    // @ts-ignore - web-only styles
+    overflow: 'auto',
   },
   songsPanelHeader: {
     padding: 16,
@@ -681,56 +721,67 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#333',
   },
-  hintContainer: {
-    padding: 12,
-    backgroundColor: '#252525',
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-  },
-  hintText: {
-    fontSize: 13,
-    color: '#999',
-    textAlign: 'center',
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   nameInput: {
-    fontSize: 24,
+    flex: 1,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#ffffff',
     padding: 12,
     backgroundColor: '#2a2a2a',
     borderRadius: 8,
-    marginBottom: 12,
   },
   headerButtons: {
     flexDirection: 'row',
     gap: 8,
   },
   saveButton: {
-    flex: 1,
     backgroundColor: '#4a9eff',
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   saveButtonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   deleteSetlistButton: {
-    flex: 1,
     backgroundColor: '#ff4444',
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   deleteSetlistButtonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
   },
   listContainer: {
     flex: 1,
+    // @ts-ignore - web-only styles
+    maxHeight: 'calc(100vh - 200px)',
+    // @ts-ignore - web-only styles
+    overflowY: 'auto',
+    // @ts-ignore - web-only styles
+    overflowX: 'hidden',
+  },
+  songsPanelList: {
+    flex: 1,
+    // @ts-ignore - web-only styles
+    maxHeight: 'calc(100vh - 150px)',
+    // @ts-ignore - web-only styles
+    overflowY: 'auto',
+    // @ts-ignore - web-only styles
+    overflowX: 'hidden',
   },
   songItem: {
     flexDirection: 'row',
@@ -738,8 +789,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#2a2a2a',
     padding: 16,
     marginHorizontal: 16,
-    marginVertical: 4,
+    marginVertical: 6,
     borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
     // @ts-ignore - web-only cursor
     cursor: Platform.OS === 'web' ? 'grab' : undefined,
   },
@@ -772,13 +828,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   songTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
     color: '#ffffff',
+    marginBottom: 4,
   },
   songArtist: {
     fontSize: 14,
-    color: '#999',
+    color: '#cccccc',
+    marginTop: 0,
+  },
+  songLineCount: {
+    fontSize: 12,
+    color: '#999999',
     marginTop: 4,
   },
   removeButton: {

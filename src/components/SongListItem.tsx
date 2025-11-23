@@ -7,10 +7,17 @@ import { Song } from '../types/models';
 interface SongListItemProps {
   song: Song;
   onPress: (song: Song) => void;
-  onAddToSetlist?: (song: Song) => void;
+  onDelete?: (song: Song) => void;
 }
 
-export function SongListItem({ song, onPress, onAddToSetlist }: SongListItemProps) {
+export function SongListItem({ song, onPress, onDelete }: SongListItemProps) {
+  const handleDelete = (e: any) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(song);
+    }
+  };
+
   return (
     <TouchableOpacity
       style={styles.container}
@@ -19,17 +26,29 @@ export function SongListItem({ song, onPress, onAddToSetlist }: SongListItemProp
       testID={`song-item-${song.id}`}
     >
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={1}>
-          {song.title}
-        </Text>
-        {song.artist && (
-          <Text style={styles.artist} numberOfLines={1}>
-            {song.artist}
+        <View style={styles.textContent}>
+          <Text style={styles.title} numberOfLines={1}>
+            {song.title}
           </Text>
+          {song.artist && (
+            <Text style={styles.artist} numberOfLines={1}>
+              {song.artist}
+            </Text>
+          )}
+          <Text style={styles.info}>
+            {song.lines.length} {song.lines.length === 1 ? 'line' : 'lines'}
+          </Text>
+        </View>
+        {onDelete && (
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDelete}
+            activeOpacity={0.7}
+            testID={`delete-song-${song.id}`}
+          >
+            <Text style={styles.deleteText}>×</Text>
+          </TouchableOpacity>
         )}
-        <Text style={styles.info}>
-          {song.lines.length} {song.lines.length === 1 ? 'line' : 'lines'}
-        </Text>
       </View>
     </TouchableOpacity>
   );
@@ -49,6 +68,13 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  textContent: {
+    flex: 1,
+    marginRight: 12,
   },
   title: {
     fontSize: 18,
@@ -64,5 +90,19 @@ const styles = StyleSheet.create({
   info: {
     fontSize: 12,
     color: '#999999',
+  },
+  deleteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#ff4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteText: {
+    fontSize: 28,
+    color: '#ffffff',
+    fontWeight: '300',
+    lineHeight: 28,
   },
 });

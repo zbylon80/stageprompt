@@ -5,7 +5,7 @@
 }
 
 *::-webkit-scrollbar {
-  width: 12px;
+  width: 14px;
 }
 
 *::-webkit-scrollbar-track {
@@ -21,4 +21,26 @@
 
 *::-webkit-scrollbar-thumb:hover {
   background: #5aa9ff;
+}
+
+/* Force scrollbars to always be visible for scrollable containers */
+[data-scrollable="true"] {
+  overflow-y: auto !important;
+  scrollbar-width: auto !important;
+}
+
+[data-scrollable="true"]::-webkit-scrollbar {
+  width: 14px !important;
+  display: block !important;
+}
+
+/* Ensure scrollbar is always visible, not just on hover */
+[data-scrollable="true"]::-webkit-scrollbar-thumb {
+  background: #4a9eff !important;
+  visibility: visible !important;
+}
+
+[data-scrollable="true"]::-webkit-scrollbar-track {
+  background: #2a2a2a !important;
+  visibility: visible !important;
 }

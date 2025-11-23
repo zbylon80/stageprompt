@@ -8,6 +8,8 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -85,8 +87,26 @@ export function SetlistListScreen({ navigation }: SetlistListScreenProps) {
     );
   }
 
-  return (
-    <View style={styles.container}>
+  // Render list content
+  const renderList = () => {
+    if (Platform.OS === 'web') {
+      return (
+        <ScrollView 
+          style={styles.flatList} 
+          contentContainerStyle={setlists.length === 0 ? styles.emptyListContent : styles.listContent}
+          // @ts-ignore - web-only style
+          dataSet={{ scrollable: 'true' }}
+        >
+          {setlists.length === 0 ? renderEmptyState() : setlists.map((item) => (
+            <View key={item.id}>
+              {renderItem({ item })}
+            </View>
+          ))}
+        </ScrollView>
+      );
+    }
+    
+    return (
       <FlatList
         data={setlists}
         renderItem={renderItem}
@@ -96,6 +116,12 @@ export function SetlistListScreen({ navigation }: SetlistListScreenProps) {
         }
         ListEmptyComponent={renderEmptyState}
       />
+    );
+  };
+
+  return (
+    <View style={styles.container}>
+      {renderList()}
       <TouchableOpacity
         style={styles.fabSongs}
         onPress={handleBrowseSongs}
@@ -118,6 +144,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1a1a',
+    // @ts-ignore - web-only styles
+    height: '100vh',
+  },
+  flatList: {
+    flex: 1,
+    // @ts-ignore - web-only styles
+    maxHeight: 'calc(100vh - 80px)',
+    // @ts-ignore - web-only styles
+    overflowY: 'auto',
+    // @ts-ignore - web-only styles
+    overflowX: 'hidden',
   },
   centerContainer: {
     flex: 1,

@@ -192,6 +192,10 @@ describe('StorageService Property Tests', () => {
    */
   describe('Property 24: Storage error does not change in-memory state', () => {
     it('should maintain in-memory state when save operation fails', async () => {
+      // Suppress console.error for this test since we're intentionally causing errors
+      const originalConsoleError = console.error;
+      console.error = jest.fn();
+      
       await fc.assert(
         fc.asyncProperty(
           songGenerator,
@@ -244,9 +248,16 @@ describe('StorageService Property Tests', () => {
         ),
         { numRuns: 100 }
       );
+      
+      // Restore console.error
+      console.error = originalConsoleError;
     });
 
     it('should maintain in-memory state when load operation fails', async () => {
+      // Suppress console.error for this test since we're intentionally causing errors
+      const originalConsoleError = console.error;
+      console.error = jest.fn();
+      
       await fc.assert(
         fc.asyncProperty(
           fc.array(songGenerator, { minLength: 1, maxLength: 5 }).map(songs => {
@@ -291,6 +302,9 @@ describe('StorageService Property Tests', () => {
         ),
         { numRuns: 100 }
       );
+      
+      // Restore console.error
+      console.error = originalConsoleError;
     });
   });
 

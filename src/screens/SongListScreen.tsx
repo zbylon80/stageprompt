@@ -1,6 +1,6 @@
 // screens/SongListScreen.tsx
 
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,11 +8,14 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSongs } from '../hooks/useSongs';
 import { SongListItem } from '../components/SongListItem';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { RootStackParamList } from '../types/navigation';
 import { Song } from '../types/models';
 import { generateId } from '../utils/idGenerator';
@@ -24,7 +27,8 @@ interface SongListScreenProps {
 }
 
 export function SongListScreen({ navigation }: SongListScreenProps) {
-  const { songs, loading, error, reload } = useSongs();
+  const { songs, loading, error, reload, deleteSong } = useSongs();
+  const [songToDelete, setSongToDelete] = useState<Song | null>(null);
 
   // Reload songs when screen comes into focus
   useFocusEffect(
@@ -49,6 +53,25 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
     navigation.navigate('SongEditor', { song: newSong });
   };
 
+  const handleDeleteSong = (song: Song) => {
+    setSongToDelete(song);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (songToDelete) {
+      try {
+        await deleteSong(songToDelete.id);
+      } catch (err) {
+        console.error('Failed to delete song:', err);
+      }
+    }
+    setSongToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setSongToDelete(null);
+  };
+
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyTitle}>No songs</Text>
@@ -62,7 +85,7 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
   );
 
   const renderItem = ({ item }: { item: Song }) => (
-    <SongListItem song={item} onPress={handleSongPress} />
+    <SongListItem song={item} onPress={handleSongPress} onDelete={handleDeleteSong} />
   );
 
   if (loading) {
@@ -86,8 +109,26 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
     navigation.navigate('SetlistList');
   };
 
-  return (
-    <View style={styles.container}>
+  // Render list content
+  const renderList = () => {
+    if (Platform.OS === 'web') {
+      return (
+        <ScrollView 
+          style={styles.flatList} 
+          contentContainerStyle={songs.length === 0 ? styles.emptyListContent : styles.listContent}
+          // @ts-ignore - web-only style
+          dataSet={{ scrollable: 'true' }}
+        >
+          {songs.length === 0 ? renderEmptyState() : songs.map((item) => (
+            <View key={item.id}>
+              {renderItem({ item })}
+            </View>
+          ))}
+        </ScrollView>
+      );
+    }
+    
+    return (
       <FlatList
         data={songs}
         renderItem={renderItem}
@@ -97,21 +138,39 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
         }
         ListEmptyComponent={renderEmptyState}
       />
-      <TouchableOpacity
-        style={styles.fabSetlists}
-        onPress={handleSetlistsPress}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabSetlistsText}>♫</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleNewSong}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
-    </View>
+    );
+  };
+
+  return (
+    <>
+      <View style={styles.container}>
+        {renderList()}
+        <TouchableOpacity
+          style={styles.fabSetlists}
+          onPress={handleSetlistsPress}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.fabSetlistsText}>♫</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={handleNewSong}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      </View>
+      <ConfirmDialog
+        visible={songToDelete !== null}
+        title="Usuń utwór"
+        message={`Czy na pewno chcesz usunąć "${songToDelete?.title || 'ten utwór'}"?`}
+        confirmText="Usuń"
+        cancelText="Anuluj"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        destructive
+      />
+    </>
   );
 }
 
@@ -119,6 +178,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1a1a',
+    // @ts-ignore - web-only styles
+    height: '100vh',
+  },
+  flatList: {
+    flex: 1,
+    // @ts-ignore - web-only styles
+    maxHeight: 'calc(100vh - 80px)',
+    // @ts-ignore - web-only styles
+    overflowY: 'auto',
+    // @ts-ignore - web-only styles
+    overflowX: 'hidden',
   },
   centerContainer: {
     flex: 1,

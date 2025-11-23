@@ -17,6 +17,7 @@ import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
 import { Song, LyricLine } from '../types/models';
 import { LyricLineEditor, LyricLineEditorRef } from '../components/LyricLineEditor';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useSongs } from '../hooks/useSongs';
 import { generateId } from '../utils/idGenerator';
 import { validateSong } from '../utils/validation';
@@ -46,6 +47,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   const lineRefs = useRef<Map<string, LyricLineEditorRef>>(new Map());
   const [lastAddedLineId, setLastAddedLineId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Auto-save with debounce
   useEffect(() => {
@@ -199,28 +201,25 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      'Delete Song',
-      `Are you sure you want to delete "${song.title || 'this song'}"?`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteSong(song.id);
-              navigation.goBack();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to delete song');
-            }
-          },
-        },
-      ]
-    );
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setShowDeleteDialog(false);
+    try {
+      await deleteSong(song.id);
+      navigation.goBack();
+    } catch (error) {
+      if (Platform.OS === 'web') {
+        Alert.alert('Error', 'Failed to delete song');
+      } else {
+        Alert.alert('Error', 'Failed to delete song');
+      }
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
   };
 
   // Render content based on platform
@@ -301,29 +300,53 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   // Web version - simple scrollable container
   if (Platform.OS === 'web') {
     return (
-      <View style={styles.container}>
-        {renderContent()}
-      </View>
+      <>
+        <View style={styles.container}>
+          {renderContent()}
+        </View>
+        <ConfirmDialog
+          visible={showDeleteDialog}
+          title="Usuń utwór"
+          message={`Czy na pewno chcesz usunąć "${song.title || 'ten utwór'}"?`}
+          confirmText="Usuń"
+          cancelText="Anuluj"
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+          destructive
+        />
+      </>
     );
   }
 
   // Mobile version - with KeyboardAvoidingView
   return (
-    <KeyboardAvoidingView
-      style={styles.keyboardAvoidingView}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
-    >
-      <ScrollView
-        ref={scrollViewRef}
-        style={styles.scrollContainer}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={true}
-        keyboardShouldPersistTaps="handled"
+    <>
+      <KeyboardAvoidingView
+        style={styles.keyboardAvoidingView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        {renderContent()}
-      </ScrollView>
-    </KeyboardAvoidingView>
+        <ScrollView
+          ref={scrollViewRef}
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={true}
+          keyboardShouldPersistTaps="handled"
+        >
+          {renderContent()}
+        </ScrollView>
+      </KeyboardAvoidingView>
+      <ConfirmDialog
+        visible={showDeleteDialog}
+        title="Usuń utwór"
+        message={`Czy na pewno chcesz usunąć "${song.title || 'ten utwór'}"?`}
+        confirmText="Usuń"
+        cancelText="Anuluj"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        destructive
+      />
+    </>
   );
 }
 
