@@ -26,6 +26,23 @@ const DEFAULT_SETTINGS: AppSettings = {
 // Default key mapping
 const DEFAULT_KEY_MAPPING: KeyMapping = {};
 
+// User-facing error messages (UTF-8 with correct Polish diacritics)
+const ERROR_MESSAGES = {
+  saveSong: 'Nie udało się zapisać utworu. Sprawdź dostępną pamięć.',
+  loadSongs: 'Nie udało się załadować utworów.',
+  deleteSong: 'Nie udało się usunąć utworu.',
+  saveSetlist: 'Nie udało się zapisać setlisty. Sprawdź dostępną pamięć.',
+  loadSetlists: 'Nie udało się załadować setlist.',
+  deleteSetlist: 'Nie udało się usunąć setlisty.',
+  saveSettings: 'Nie udało się zapisać ustawień.',
+  loadSettings: 'Nie udało się załadować ustawień.',
+  saveKeyMapping: 'Nie udało się zapisać mapowania klawiszy.',
+  loadKeyMapping: 'Nie udało się załadować mapowania klawiszy.',
+  exportData: 'Nie udało się wyeksportować danych.',
+  importData: 'Nie udało się zaimportować danych.',
+  clearAll: 'Nie udało się wyczyścić danych.',
+};
+
 export interface StorageService {
   // Songs
   saveSong(song: Song): Promise<void>;
@@ -70,7 +87,7 @@ class StorageServiceImpl implements StorageService {
       }
     } catch (error) {
       console.error('Error saving song:', error);
-      throw new Error('Nie udało się zapisać utworu. Sprawdź dostępną pamięć.');
+      throw new Error(ERROR_MESSAGES.saveSong);
     }
   }
 
@@ -89,7 +106,7 @@ class StorageServiceImpl implements StorageService {
       return songs;
     } catch (error) {
       console.error('Error loading songs:', error);
-      throw new Error('Nie udało się załadować utworów.');
+      throw new Error(ERROR_MESSAGES.loadSongs);
     }
   }
 
@@ -115,7 +132,7 @@ class StorageServiceImpl implements StorageService {
       await AsyncStorage.setItem(KEYS.SONGS_INDEX, JSON.stringify(newIndex));
     } catch (error) {
       console.error('Error deleting song:', error);
-      throw new Error('Nie udało się usunąć utworu.');
+      throw new Error(ERROR_MESSAGES.deleteSong);
     }
   }
 
@@ -142,7 +159,7 @@ class StorageServiceImpl implements StorageService {
       }
     } catch (error) {
       console.error('Error saving setlist:', error);
-      throw new Error('Nie udało się zapisać setlisty. Sprawdź dostępną pamięć.');
+      throw new Error(ERROR_MESSAGES.saveSetlist);
     }
   }
 
@@ -161,7 +178,7 @@ class StorageServiceImpl implements StorageService {
       return setlists;
     } catch (error) {
       console.error('Error loading setlists:', error);
-      throw new Error('Nie udało się załadować setlist.');
+      throw new Error(ERROR_MESSAGES.loadSetlists);
     }
   }
 
@@ -187,7 +204,7 @@ class StorageServiceImpl implements StorageService {
       await AsyncStorage.setItem(KEYS.SETLISTS_INDEX, JSON.stringify(newIndex));
     } catch (error) {
       console.error('Error deleting setlist:', error);
-      throw new Error('Nie udało się usunąć setlisty.');
+      throw new Error(ERROR_MESSAGES.deleteSetlist);
     }
   }
 
@@ -206,7 +223,7 @@ class StorageServiceImpl implements StorageService {
       await AsyncStorage.setItem(KEYS.SETTINGS, JSON.stringify(settings));
     } catch (error) {
       console.error('Error saving settings:', error);
-      throw new Error('Nie udało się zapisać ustawień.');
+      throw new Error(ERROR_MESSAGES.saveSettings);
     }
   }
 
@@ -226,7 +243,7 @@ class StorageServiceImpl implements StorageService {
       await AsyncStorage.setItem(KEYS.KEY_MAPPING, JSON.stringify(mapping));
     } catch (error) {
       console.error('Error saving key mapping:', error);
-      throw new Error('Nie udało się zapisać mapowania klawiszy.');
+      throw new Error(ERROR_MESSAGES.saveKeyMapping);
     }
   }
 
@@ -256,7 +273,7 @@ class StorageServiceImpl implements StorageService {
       return JSON.stringify(exportData, null, 2);
     } catch (error) {
       console.error('Error exporting data:', error);
-      throw new Error('Nie udało się wyeksportować danych.');
+      throw new Error(ERROR_MESSAGES.exportData);
     }
   }
 
@@ -286,7 +303,7 @@ class StorageServiceImpl implements StorageService {
       if (error instanceof SyntaxError) {
         throw new Error('Plik jest uszkodzony lub ma niepoprawny format.');
       }
-      throw new Error('Nie udało się zaimportować danych.');
+      throw new Error(ERROR_MESSAGES.importData);
     }
   }
 
@@ -296,7 +313,7 @@ class StorageServiceImpl implements StorageService {
       await AsyncStorage.clear();
     } catch (error) {
       console.error('Error clearing storage:', error);
-      throw new Error('Nie udało się wyczyścić danych.');
+      throw new Error(ERROR_MESSAGES.clearAll);
     }
   }
 }
