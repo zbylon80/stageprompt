@@ -1,6 +1,6 @@
 // screens/SetlistEditorScreen.tsx
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -62,6 +62,7 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Determine if we should show split view (wider screens)
   const useSplitView = width >= 768;
@@ -190,6 +191,10 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
     navigation.navigate('SongEditor', { song });
   };
 
+  const handleSongPreview = (song: Song) => {
+    navigation.navigate('Prompter', { songId: song.id, setlistId: setlist?.id });
+  };
+
   const handleNewSong = () => {
     const newSong: Song = {
       id: generateId(),
@@ -249,6 +254,25 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
     return songs.find(song => song.id === id);
   };
 
+  // Filter and sort songs for the songs panel
+  const filteredAndSortedSongs = useMemo(() => {
+    let filtered = songs;
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = songs.filter(song => 
+        song.title.toLowerCase().includes(query) ||
+        (song.artist && song.artist.toLowerCase().includes(query))
+      );
+    }
+    
+    // Sort alphabetically by title
+    return [...filtered].sort((a, b) => 
+      a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+    );
+  }, [songs, searchQuery]);
+
   const renderSongItem = ({ item, drag, isActive }: any) => {
     const song = getSongById(item);
     if (!song) return null;
@@ -274,12 +298,22 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
               {song.lines.length} {song.lines.length === 1 ? 'line' : 'lines'}
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={() => handleRemoveSong(item)}
-            style={styles.removeButton}
-          >
-            <Text style={styles.removeButtonText}>✕</Text>
-          </TouchableOpacity>
+          <View style={styles.songItemActions}>
+            {song.lines.length > 0 && (
+              <TouchableOpacity
+                onPress={() => handleSongPreview(song)}
+                style={styles.previewButtonInline}
+              >
+                <Text style={styles.previewButtonText}>▶</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              onPress={() => handleRemoveSong(item)}
+              style={styles.removeButton}
+            >
+              <Text style={styles.removeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
         </TouchableOpacity>
       </ItemWrapper>
     );
@@ -364,12 +398,22 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
             {song.lines.length} {song.lines.length === 1 ? 'line' : 'lines'}
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={() => handleRemoveSong(item)}
-          style={styles.removeButton}
-        >
-          <Text style={styles.removeButtonText}>✕</Text>
-        </TouchableOpacity>
+        <View style={styles.songItemActions}>
+          {song.lines.length > 0 && (
+            <TouchableOpacity
+              onPress={() => handleSongPreview(song)}
+              style={styles.previewButtonInline}
+            >
+              <Text style={styles.previewButtonText}>▶</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={() => handleRemoveSong(item)}
+            style={styles.removeButton}
+          >
+            <Text style={styles.removeButtonText}>✕</Text>
+          </TouchableOpacity>
+        </View>
       </>
     );
 
@@ -417,11 +461,13 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
 
   // Render songs panel (right side)
   const renderSongsPanel = () => {
+    const displaySongs = filteredAndSortedSongs;
+    
     const renderSongItem = (song: Song) => {
       const isInSetlist = songIds.includes(song.id);
       return (
         <View key={song.id} style={styles.songsPanelItemWrapper}>
-          <SongListItem song={song} onPress={handleSongPress} />
+          <SongListItem song={song} onPress={handleSongPress} onPreview={handleSongPreview} />
           <TouchableOpacity
             style={[
               styles.addToSetlistButton,
@@ -441,19 +487,37 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
     return (
       <View style={[styles.songsPanel, useSplitView && styles.songsPanelSplit]}>
         <View style={styles.songsPanelHeader}>
-          <View style={styles.songsPanelHeaderContent}>
-            <View>
+          <View style={styles.songsPanelHeaderTop}>
+            <View style={styles.songsPanelTitleContainer}>
               <Text style={styles.songsPanelTitle}>All Songs</Text>
               <Text style={styles.songsPanelSubtitle}>
-                {songs.length} {songs.length === 1 ? 'song' : 'songs'}
+                {displaySongs.length} {displaySongs.length === 1 ? 'song' : 'songs'}
+                {searchQuery.trim() && ` (filtered from ${songs.length})`}
               </Text>
+            </View>
+            <View style={styles.searchContainer}>
+              <TextInput
+                style={styles.searchInput}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                placeholder="Search..."
+                placeholderTextColor="#666"
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity
+                  style={styles.clearButton}
+                  onPress={() => setSearchQuery('')}
+                >
+                  <Text style={styles.clearButtonText}>✕</Text>
+                </TouchableOpacity>
+              )}
             </View>
             <TouchableOpacity
               style={styles.newSongButton}
               onPress={handleNewSong}
               activeOpacity={0.8}
             >
-              <Text style={styles.newSongButtonText}>+ New Song</Text>
+              <Text style={styles.newSongButtonText}>+ New</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -463,24 +527,32 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
             // @ts-ignore - web-only style
             dataSet={{ scrollable: 'true' }}
           >
-            {songs.length === 0 ? (
+            {displaySongs.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No songs available</Text>
-                <Text style={styles.emptySubtext}>Tap "New Song" to create one</Text>
+                <Text style={styles.emptyText}>
+                  {searchQuery.trim() ? `No results for "${searchQuery}"` : 'No songs available'}
+                </Text>
+                <Text style={styles.emptySubtext}>
+                  {searchQuery.trim() ? 'Try a different search' : 'Tap "New Song" to create one'}
+                </Text>
               </View>
             ) : (
-              songs.map(renderSongItem)
+              displaySongs.map(renderSongItem)
             )}
           </ScrollView>
         ) : (
           <FlatList
-            data={songs}
+            data={displaySongs}
             keyExtractor={(song) => song.id}
             renderItem={({ item: song }) => renderSongItem(song)}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No songs available</Text>
-                <Text style={styles.emptySubtext}>Tap "New Song" to create one</Text>
+                <Text style={styles.emptyText}>
+                  {searchQuery.trim() ? `No results for "${searchQuery}"` : 'No songs available'}
+                </Text>
+                <Text style={styles.emptySubtext}>
+                  {searchQuery.trim() ? 'Try a different search' : 'Tap "New Song" to create one'}
+                </Text>
               </View>
             }
           />
@@ -627,12 +699,20 @@ const styles = StyleSheet.create({
     flex: 1,
     // @ts-ignore - web-only styles
     overflow: 'auto',
+    // @ts-ignore - web-only styles
+    display: 'flex',
+    // @ts-ignore - web-only styles
+    flexDirection: 'column',
   },
   setlistContentSplit: {
     flex: 1,
     minWidth: 300,
     // @ts-ignore - web-only styles
     overflow: 'auto',
+    // @ts-ignore - web-only styles
+    display: 'flex',
+    // @ts-ignore - web-only styles
+    flexDirection: 'column',
   },
   songsPanel: {
     flex: 1,
@@ -652,6 +732,36 @@ const styles = StyleSheet.create({
     borderBottomColor: '#333',
     backgroundColor: '#252525',
   },
+  songsPanelHeaderTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  songsPanelTitleContainer: {
+    flex: 0,
+    minWidth: 100,
+  },
+  searchContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 14,
+    color: '#ffffff',
+  },
+  clearButton: {
+    marginLeft: 8,
+    padding: 4,
+  },
+  clearButtonText: {
+    fontSize: 18,
+    color: '#666',
+  },
   songsPanelHeaderContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -669,7 +779,7 @@ const styles = StyleSheet.create({
   },
   newSongButton: {
     backgroundColor: '#4a9eff',
-    paddingHorizontal: 16,
+    paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 8,
     elevation: 2,
@@ -677,10 +787,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    minWidth: 70,
+    alignItems: 'center',
   },
   newSongButtonText: {
     color: '#ffffff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
   },
   songsPanelItemWrapper: {
@@ -768,8 +880,6 @@ const styles = StyleSheet.create({
   listContainer: {
     flex: 1,
     // @ts-ignore - web-only styles
-    maxHeight: 'calc(100vh - 200px)',
-    // @ts-ignore - web-only styles
     overflowY: 'auto',
     // @ts-ignore - web-only styles
     overflowX: 'hidden',
@@ -843,9 +953,27 @@ const styles = StyleSheet.create({
     color: '#999999',
     marginTop: 4,
   },
+  songItemActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  previewButtonInline: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#4a9eff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewButtonText: {
+    fontSize: 14,
+    color: '#ffffff',
+    fontWeight: '600',
+  },
   removeButton: {
     padding: 8,
-    marginLeft: 8,
+    marginLeft: 0,
   },
   removeButtonText: {
     fontSize: 20,

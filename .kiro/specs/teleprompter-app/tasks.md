@@ -323,7 +323,12 @@
   - Fix błędów wykrytych podczas testowania
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 14. Implementacja ekranu promptera - podstawy
+- [x] 14. Implementacja ekranu promptera - podstawy
+
+
+
+
+
   - Utworzenie screens/PrompterScreen.tsx
   - Implementacja fullscreen mode
   - Implementacja wyświetlania tekstu (duża czcionka, ciemne tło)

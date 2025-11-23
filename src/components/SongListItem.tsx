@@ -8,13 +8,21 @@ interface SongListItemProps {
   song: Song;
   onPress: (song: Song) => void;
   onDelete?: (song: Song) => void;
+  onPreview?: (song: Song) => void;
 }
 
-export function SongListItem({ song, onPress, onDelete }: SongListItemProps) {
+export function SongListItem({ song, onPress, onDelete, onPreview }: SongListItemProps) {
   const handleDelete = (e: any) => {
     e.stopPropagation();
     if (onDelete) {
       onDelete(song);
+    }
+  };
+
+  const handlePreview = (e: any) => {
+    e.stopPropagation();
+    if (onPreview) {
+      onPreview(song);
     }
   };
 
@@ -39,16 +47,28 @@ export function SongListItem({ song, onPress, onDelete }: SongListItemProps) {
             {song.lines.length} {song.lines.length === 1 ? 'line' : 'lines'}
           </Text>
         </View>
-        {onDelete && (
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDelete}
-            activeOpacity={0.7}
-            testID={`delete-song-${song.id}`}
-          >
-            <Text style={styles.deleteText}>×</Text>
-          </TouchableOpacity>
-        )}
+        <View style={styles.actions}>
+          {onPreview && song.lines.length > 0 && (
+            <TouchableOpacity
+              style={styles.previewButton}
+              onPress={handlePreview}
+              activeOpacity={0.7}
+              testID={`preview-song-${song.id}`}
+            >
+              <Text style={styles.previewText}>▶</Text>
+            </TouchableOpacity>
+          )}
+          {onDelete && (
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={handleDelete}
+              activeOpacity={0.7}
+              testID={`delete-song-${song.id}`}
+            >
+              <Text style={styles.deleteText}>×</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -90,6 +110,24 @@ const styles = StyleSheet.create({
   info: {
     fontSize: 12,
     color: '#999999',
+  },
+  actions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  previewButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#4a9eff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  previewText: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '600',
+    lineHeight: 16,
   },
   deleteButton: {
     width: 36,

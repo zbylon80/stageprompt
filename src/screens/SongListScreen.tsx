@@ -1,6 +1,6 @@
 // screens/SongListScreen.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Platform,
   ScrollView,
+  TextInput,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -29,6 +30,7 @@ interface SongListScreenProps {
 export function SongListScreen({ navigation }: SongListScreenProps) {
   const { songs, loading, error, reload, deleteSong } = useSongs();
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Reload songs when screen comes into focus
   useFocusEffect(
@@ -39,6 +41,10 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
 
   const handleSongPress = (song: Song) => {
     navigation.navigate('SongEditor', { song });
+  };
+
+  const handleSongPreview = (song: Song) => {
+    navigation.navigate('Prompter', { songId: song.id });
   };
 
   const handleNewSong = () => {
@@ -72,6 +78,25 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
     setSongToDelete(null);
   };
 
+  // Filter and sort songs
+  const filteredAndSortedSongs = useMemo(() => {
+    let filtered = songs;
+    
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = songs.filter(song => 
+        song.title.toLowerCase().includes(query) ||
+        (song.artist && song.artist.toLowerCase().includes(query))
+      );
+    }
+    
+    // Sort alphabetically by title
+    return [...filtered].sort((a, b) => 
+      a.title.toLowerCase().localeCompare(b.title.toLowerCase())
+    );
+  }, [songs, searchQuery]);
+
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
       <Text style={styles.emptyTitle}>No songs</Text>
@@ -85,7 +110,12 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
   );
 
   const renderItem = ({ item }: { item: Song }) => (
-    <SongListItem song={item} onPress={handleSongPress} onDelete={handleDeleteSong} />
+    <SongListItem 
+      song={item} 
+      onPress={handleSongPress} 
+      onDelete={handleDeleteSong}
+      onPreview={handleSongPreview}
+    />
   );
 
   if (loading) {
@@ -111,15 +141,27 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
 
   // Render list content
   const renderList = () => {
+    const displaySongs = filteredAndSortedSongs;
+    const isEmpty = displaySongs.length === 0;
+    
     if (Platform.OS === 'web') {
       return (
         <ScrollView 
           style={styles.flatList} 
-          contentContainerStyle={songs.length === 0 ? styles.emptyListContent : styles.listContent}
+          contentContainerStyle={isEmpty ? styles.emptyListContent : styles.listContent}
           // @ts-ignore - web-only style
           dataSet={{ scrollable: 'true' }}
         >
-          {songs.length === 0 ? renderEmptyState() : songs.map((item) => (
+          {isEmpty ? (
+            searchQuery.trim() ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyTitle}>No results</Text>
+                <Text style={styles.emptyText}>
+                  No songs match "{searchQuery}"
+                </Text>
+              </View>
+            ) : renderEmptyState()
+          ) : displaySongs.map((item) => (
             <View key={item.id}>
               {renderItem({ item })}
             </View>
@@ -130,13 +172,22 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
     
     return (
       <FlatList
-        data={songs}
+        data={displaySongs}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={
-          songs.length === 0 ? styles.emptyListContent : styles.listContent
+          isEmpty ? styles.emptyListContent : styles.listContent
         }
-        ListEmptyComponent={renderEmptyState}
+        ListEmptyComponent={
+          searchQuery.trim() ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyTitle}>No results</Text>
+              <Text style={styles.emptyText}>
+                No songs match "{searchQuery}"
+              </Text>
+            </View>
+          ) : renderEmptyState()
+        }
       />
     );
   };
@@ -144,6 +195,23 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
   return (
     <>
       <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search songs..."
+            placeholderTextColor="#666"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={() => setSearchQuery('')}
+            >
+              <Text style={styles.clearButtonText}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
         {renderList()}
         <TouchableOpacity
           style={styles.fabSetlists}
@@ -181,10 +249,35 @@ const styles = StyleSheet.create({
     // @ts-ignore - web-only styles
     height: '100vh',
   },
+  searchContainer: {
+    padding: 16,
+    paddingBottom: 8,
+    backgroundColor: '#1a1a1a',
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  searchInput: {
+    flex: 1,
+    backgroundColor: '#2a2a2a',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#ffffff',
+  },
+  clearButton: {
+    marginLeft: 8,
+    padding: 8,
+  },
+  clearButtonText: {
+    fontSize: 20,
+    color: '#666',
+  },
   flatList: {
     flex: 1,
     // @ts-ignore - web-only styles
-    maxHeight: 'calc(100vh - 80px)',
+    maxHeight: 'calc(100vh - 140px)',
     // @ts-ignore - web-only styles
     overflowY: 'auto',
     // @ts-ignore - web-only styles

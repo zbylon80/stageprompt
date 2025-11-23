@@ -234,6 +234,16 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
           <Text style={styles.topButtonText}>Save</Text>
         </TouchableOpacity>
         
+        {song.title && song.lines.length > 0 && (
+          <TouchableOpacity
+            style={[styles.topButton, styles.previewButton]}
+            onPress={() => navigation.navigate('Prompter', { songId: song.id })}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.topButtonText}>▶ Preview</Text>
+          </TouchableOpacity>
+        )}
+        
         {song.title && (
           <TouchableOpacity
             style={[styles.topButton, styles.deleteTopButton]}
@@ -387,6 +397,10 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     borderColor: '#3a4a3a',
+  },
+  previewButton: {
+    backgroundColor: '#2a2a3a',
+    borderColor: '#3a3a4a',
   },
   deleteTopButton: {
     backgroundColor: '#3a2a2a',

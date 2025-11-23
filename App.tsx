@@ -8,6 +8,7 @@ import { SongListScreen } from './src/screens/SongListScreen';
 import { SongEditorScreen } from './src/screens/SongEditorScreen';
 import { SetlistListScreen } from './src/screens/SetlistListScreen';
 import { SetlistEditorScreen } from './src/screens/SetlistEditorScreen';
+import { PrompterScreen } from './src/screens/PrompterScreen';
 import { RootStackParamList } from './src/types/navigation';
 
 // Import CSS for web scrollbar styling
@@ -18,14 +19,6 @@ if (Platform.OS === 'web') {
 const Stack = createStackNavigator<RootStackParamList>();
 
 // Placeholder screens - to be implemented
-
-function PrompterScreen() {
-  return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Teleprompter - Under Construction</Text>
-    </View>
-  );
-}
 
 function SettingsScreen() {
   return (
