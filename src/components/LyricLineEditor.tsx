@@ -1,6 +1,6 @@
 // components/LyricLineEditor.tsx
 
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LyricLine } from '../types/models';
 
@@ -29,6 +29,14 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
   const [timeText, setTimeText] = React.useState(line.timeSeconds.toString());
   const textInputRef = React.useRef<TextInput>(null);
   const containerRef = React.useRef<View>(null);
+
+  // Keep local text input in sync when parent updates timeSeconds
+  useEffect(() => {
+    const nextText = line.timeSeconds.toString();
+    if (timeText !== nextText) {
+      setTimeText(nextText);
+    }
+  }, [line.timeSeconds, timeText]);
 
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({

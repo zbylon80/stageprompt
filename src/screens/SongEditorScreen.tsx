@@ -45,9 +45,14 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   const scrollViewRef = useRef<ScrollView>(null);
   const lineRefs = useRef<Map<string, LyricLineEditorRef>>(new Map());
   const [lastAddedLineId, setLastAddedLineId] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
 
   // Auto-save with debounce
   useEffect(() => {
+    if (!isDirty) {
+      return;
+    }
+
     const timer = setTimeout(() => {
       if (song.title.trim()) {
         const errors = validateSong(song);
@@ -55,22 +60,26 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
           saveSong({
             ...song,
             updatedAt: Date.now(),
-          }).catch((error) => {
-            console.error('Auto-save failed:', error);
-          });
+          })
+            .then(() => setIsDirty(false))
+            .catch((error) => {
+              console.error('Auto-save failed:', error);
+            });
         }
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [song, saveSong]);
+  }, [song, saveSong, isDirty]);
 
   const updateTitle = (title: string) => {
     setSong((prev) => ({ ...prev, title }));
+    setIsDirty(true);
   };
 
   const updateArtist = (artist: string) => {
     setSong((prev) => ({ ...prev, artist }));
+    setIsDirty(true);
   };
 
   const addLine = useCallback(() => {
@@ -86,6 +95,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
       ...prev,
       lines: [...prev.lines, newLine],
     }));
+    setIsDirty(true);
   }, [song.lines]);
 
   // Auto-scroll and auto-focus on newly added line
@@ -122,6 +132,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         line.id === id ? { ...line, text } : line
       ),
     }));
+    setIsDirty(true);
   };
 
   const updateLineTime = (id: string, timeSeconds: number) => {
@@ -131,6 +142,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         line.id === id ? { ...line, timeSeconds } : line
       ),
     }));
+    setIsDirty(true);
   };
 
   const deleteLine = (id: string) => {
@@ -138,6 +150,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
       ...prev,
       lines: prev.lines.filter((line) => line.id !== id),
     }));
+    setIsDirty(true);
   };
 
   const handleSplitLines = (id: string, lines: string[]) => {
@@ -163,6 +176,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         lines: updatedLines,
       };
     });
+    setIsDirty(true);
   };
 
   const handleSave = async () => {
@@ -177,6 +191,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         ...song,
         updatedAt: Date.now(),
       });
+      setIsDirty(false);
       navigation.goBack();
     } catch (error) {
       Alert.alert('Error', 'Failed to save song');

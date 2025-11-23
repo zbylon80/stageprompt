@@ -2,6 +2,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Song, Setlist, AppSettings, KeyMapping } from '../types/models';
+import { validateImportData } from '../utils/validation';
 
 // Storage keys
 const KEYS = {
@@ -49,25 +50,25 @@ export interface StorageService {
   loadSongs(): Promise<Song[]>;
   loadSong(id: string): Promise<Song | null>;
   deleteSong(id: string): Promise<void>;
-  
+
   // Setlists
   saveSetlist(setlist: Setlist): Promise<void>;
   loadSetlists(): Promise<Setlist[]>;
   loadSetlist(id: string): Promise<Setlist | null>;
   deleteSetlist(id: string): Promise<void>;
-  
+
   // Settings
   saveSettings(settings: AppSettings): Promise<void>;
   loadSettings(): Promise<AppSettings>;
-  
+
   // Key Mappings
   saveKeyMapping(mapping: KeyMapping): Promise<void>;
   loadKeyMapping(): Promise<KeyMapping>;
-  
+
   // Export/Import
   exportData(): Promise<string>;
   importData(jsonString: string): Promise<void>;
-  
+
   // Utility
   clearAll(): Promise<void>;
 }
@@ -78,7 +79,7 @@ class StorageServiceImpl implements StorageService {
     try {
       const key = `${KEYS.SONG_PREFIX}${song.id}`;
       await AsyncStorage.setItem(key, JSON.stringify(song));
-      
+
       // Update index
       const index = await this.loadSongsIndex();
       if (!index.includes(song.id)) {
@@ -95,14 +96,14 @@ class StorageServiceImpl implements StorageService {
     try {
       const index = await this.loadSongsIndex();
       const songs: Song[] = [];
-      
+
       for (const id of index) {
         const song = await this.loadSong(id);
         if (song) {
           songs.push(song);
         }
       }
-      
+
       return songs;
     } catch (error) {
       console.error('Error loading songs:', error);
@@ -125,10 +126,10 @@ class StorageServiceImpl implements StorageService {
     try {
       const key = `${KEYS.SONG_PREFIX}${id}`;
       await AsyncStorage.removeItem(key);
-      
+
       // Update index
       const index = await this.loadSongsIndex();
-      const newIndex = index.filter(songId => songId !== id);
+      const newIndex = index.filter((songId) => songId !== id);
       await AsyncStorage.setItem(KEYS.SONGS_INDEX, JSON.stringify(newIndex));
     } catch (error) {
       console.error('Error deleting song:', error);
@@ -140,7 +141,7 @@ class StorageServiceImpl implements StorageService {
     try {
       const data = await AsyncStorage.getItem(KEYS.SONGS_INDEX);
       return data ? JSON.parse(data) : [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -150,7 +151,7 @@ class StorageServiceImpl implements StorageService {
     try {
       const key = `${KEYS.SETLIST_PREFIX}${setlist.id}`;
       await AsyncStorage.setItem(key, JSON.stringify(setlist));
-      
+
       // Update index
       const index = await this.loadSetlistsIndex();
       if (!index.includes(setlist.id)) {
@@ -167,14 +168,14 @@ class StorageServiceImpl implements StorageService {
     try {
       const index = await this.loadSetlistsIndex();
       const setlists: Setlist[] = [];
-      
+
       for (const id of index) {
         const setlist = await this.loadSetlist(id);
         if (setlist) {
           setlists.push(setlist);
         }
       }
-      
+
       return setlists;
     } catch (error) {
       console.error('Error loading setlists:', error);
@@ -197,10 +198,10 @@ class StorageServiceImpl implements StorageService {
     try {
       const key = `${KEYS.SETLIST_PREFIX}${id}`;
       await AsyncStorage.removeItem(key);
-      
+
       // Update index
       const index = await this.loadSetlistsIndex();
-      const newIndex = index.filter(setlistId => setlistId !== id);
+      const newIndex = index.filter((setlistId) => setlistId !== id);
       await AsyncStorage.setItem(KEYS.SETLISTS_INDEX, JSON.stringify(newIndex));
     } catch (error) {
       console.error('Error deleting setlist:', error);
@@ -212,7 +213,7 @@ class StorageServiceImpl implements StorageService {
     try {
       const data = await AsyncStorage.getItem(KEYS.SETLISTS_INDEX);
       return data ? JSON.parse(data) : [];
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -262,14 +263,14 @@ class StorageServiceImpl implements StorageService {
     try {
       const songs = await this.loadSongs();
       const setlists = await this.loadSetlists();
-      
+
       const exportData = {
         version: '1.0',
         exportDate: Date.now(),
         songs,
         setlists,
       };
-      
+
       return JSON.stringify(exportData, null, 2);
     } catch (error) {
       console.error('Error exporting data:', error);
@@ -280,20 +281,16 @@ class StorageServiceImpl implements StorageService {
   async importData(jsonString: string): Promise<void> {
     try {
       const data = JSON.parse(jsonString);
-      
-      // Validate structure
-      if (!data.songs || !Array.isArray(data.songs)) {
-        throw new Error('Invalid data structure: missing songs array');
+
+      if (!validateImportData(data)) {
+        throw new Error('Dane importu są nieprawidłowe.');
       }
-      if (!data.setlists || !Array.isArray(data.setlists)) {
-        throw new Error('Invalid data structure: missing setlists array');
-      }
-      
+
       // Import songs
       for (const song of data.songs) {
         await this.saveSong(song);
       }
-      
+
       // Import setlists
       for (const setlist of data.setlists) {
         await this.saveSetlist(setlist);

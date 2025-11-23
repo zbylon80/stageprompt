@@ -50,13 +50,13 @@ npm run test:coverage
 
 ```
 src/
-├── types/           # Definicje TypeScript
-├── screens/         # Ekrany aplikacji
-├── components/      # Komponenty wielokrotnego użytku
-├── services/        # Logika biznesowa
-├── hooks/           # Custom React hooks
-├── context/         # React Context dla globalnego stanu
-└── utils/           # Funkcje pomocnicze
+├── types/        # Definicje TypeScript
+├── screens/      # Ekrany aplikacji
+├── components/   # Komponenty wielokrotnego użytku
+├── services/     # Logika biznesowa
+├── hooks/        # Custom React hooks
+├── context/      # React Context dla globalnego stanu
+└── utils/        # Funkcje pomocnicze
 ```
 
 ## Technologie
