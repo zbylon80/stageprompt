@@ -211,6 +211,26 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   // Render content based on platform
   const renderContent = () => (
     <>
+      <View style={styles.topActions}>
+        <TouchableOpacity
+          style={styles.topButton}
+          onPress={handleSave}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.topButtonText}>Save</Text>
+        </TouchableOpacity>
+        
+        {song.title && (
+          <TouchableOpacity
+            style={[styles.topButton, styles.deleteTopButton]}
+            onPress={handleDelete}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.topButtonText}>Delete</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
       <View style={styles.headerContainer}>
         <Text style={styles.label}>Title</Text>
         <TextInput
@@ -260,26 +280,6 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
           onSplitLines={handleSplitLines}
         />
       ))}
-
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSave}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.saveButtonText}>Save & Close</Text>
-        </TouchableOpacity>
-        
-        {song.title && (
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDelete}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.deleteButtonText}>Delete Song</Text>
-          </TouchableOpacity>
-        )}
-      </View>
     </>
   );
 
@@ -332,9 +332,37 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingBottom: 50,
   },
+  topActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    gap: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a2a',
+  },
+  topButton: {
+    backgroundColor: '#2a3a2a',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#3a4a3a',
+  },
+  deleteTopButton: {
+    backgroundColor: '#3a2a2a',
+    borderColor: '#4a3a3a',
+  },
+  topButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#aaaaaa',
+  },
   headerContainer: {
     paddingHorizontal: 16,
     marginBottom: 16,
+    marginTop: 12,
   },
   label: {
     fontSize: 14,
@@ -370,32 +398,6 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  footer: {
-    padding: 16,
-    gap: 12,
-  },
-  saveButton: {
-    backgroundColor: '#4a9eff',
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  deleteButton: {
-    backgroundColor: '#ff6b6b',
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
   },

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import fc from 'fast-check';
 import { SongListScreen } from '../SongListScreen';
 import { Song } from '../../types/models';
@@ -13,10 +14,22 @@ const mockNavigation = {
   navigate: mockNavigate,
   goBack: jest.fn(),
   setOptions: jest.fn(),
+  addListener: jest.fn(() => jest.fn()),
+  removeListener: jest.fn(),
+  isFocused: jest.fn(() => true),
 } as any;
 
 // Mock the useSongs hook
 jest.mock('../../hooks/useSongs');
+
+// Helper to render with NavigationContainer
+function renderWithNavigation(component: React.ReactElement) {
+  return render(
+    <NavigationContainer>
+      {component}
+    </NavigationContainer>
+  );
+}
 
 /**
  * Feature: teleprompter-app, Property 1: Lista utworów wyświetla wszystkie zapisane utwory
@@ -52,12 +65,12 @@ describe('Property 1: Lista utworów wyświetla wszystkie zapisane utwory', () =
             reload: jest.fn(),
           });
 
-          const { queryByText } = render(
+          const { queryByText } = renderWithNavigation(
             <SongListScreen navigation={mockNavigation} />
           );
 
           // Property: For any non-empty list of songs, the empty state should NOT be shown
-          expect(queryByText(/Brak utworów/i)).toBeFalsy();
+          expect(queryByText(/No songs/i)).toBeFalsy();
           
           // Property: For any non-empty list of songs, at least the first song's title should be visible
           expect(queryByText(songs[0].title)).toBeTruthy();
@@ -84,16 +97,16 @@ describe('Property 1: Lista utworów wyświetla wszystkie zapisane utwory', () =
             reload: jest.fn(),
           });
 
-          const { queryByText } = render(
+          const { queryByText } = renderWithNavigation(
             <SongListScreen navigation={mockNavigation} />
           );
 
           if (songs.length === 0) {
             // Should show empty state
-            expect(queryByText(/Brak utworów/i)).toBeTruthy();
+            expect(queryByText(/No songs/i)).toBeTruthy();
           } else {
             // Should not show empty state
-            expect(queryByText(/Brak utworów/i)).toBeFalsy();
+            expect(queryByText(/No songs/i)).toBeFalsy();
           }
 
           return true;
@@ -168,7 +181,7 @@ describe('Property 2: Nawigacja do edytora przekazuje poprawny utwór', () => {
             reload: jest.fn(),
           });
 
-          const { queryByTestId } = render(
+          const { queryByTestId } = renderWithNavigation(
             <SongListScreen navigation={mockNavigation} />
           );
 
@@ -211,12 +224,12 @@ describe('Empty state', () => {
       reload: jest.fn(),
     });
 
-    const { getByText } = render(
+    const { getByText } = renderWithNavigation(
       <SongListScreen navigation={mockNavigation} />
     );
 
     // Verify empty state message is displayed
-    expect(getByText(/Brak utworów/i)).toBeTruthy();
-    expect(getByText(/Dotknij przycisk \+ aby utworzyć pierwszy utwór/i)).toBeTruthy();
+    expect(getByText(/No songs/i)).toBeTruthy();
+    expect(getByText(/Tap the \+ button to create your first song/i)).toBeTruthy();
   });
 });
