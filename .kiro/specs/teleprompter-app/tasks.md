@@ -198,10 +198,20 @@
   - Weryfikacja nawigacji do edytora
   - **Validates: Requirements 1.1, 1.2, 1.3, 1.5**
 
-- [ ] 9. Checkpoint - Upewnij się że wszystkie testy przechodzą
+- [x] 9. Checkpoint - Upewnij się że wszystkie testy przechodzą
+
+
+
+
+
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Napisanie test case'ów E2E dla edytora utworu (MCP Playwright)
+- [x] 10. Napisanie test case'ów E2E dla edytora utworu (MCP Playwright)
+
+
+
+
+
   - Utworzenie e2e/test-cases/TC-003-song-editor-metadata.md
   - Utworzenie e2e/test-cases/TC-004-song-editor-lyrics.md
   - Utworzenie e2e/test-cases/TC-005-song-editor-timing.md
