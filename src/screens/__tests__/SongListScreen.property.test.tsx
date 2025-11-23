@@ -44,13 +44,14 @@ describe('Property 1: Lista utworów wyświetla wszystkie zapisane utwory', () =
     fc.assert(
       fc.property(
         fc.array(validSongGenerator(), { minLength: 1, maxLength: 20 }).map(songs => {
-          // Ensure unique IDs by adding index to each song ID
+          // Ensure unique IDs AND unique titles by adding index
           return songs.map((song, index) => ({
             ...song,
-            id: `${song.id}-${index}`,
+            id: `test-id-${index}`,
+            title: `${song.title}-${index}`,
             lines: song.lines.map((line, lineIndex) => ({
               ...line,
-              id: `${line.id}-${index}-${lineIndex}`,
+              id: `line-${index}-${lineIndex}`,
             })),
           }));
         }),
@@ -65,7 +66,7 @@ describe('Property 1: Lista utworów wyświetla wszystkie zapisane utwory', () =
             reload: jest.fn(),
           });
 
-          const { queryByText } = renderWithNavigation(
+          const { queryByText, getAllByText } = renderWithNavigation(
             <SongListScreen navigation={mockNavigation} />
           );
 
@@ -73,6 +74,7 @@ describe('Property 1: Lista utworów wyświetla wszystkie zapisane utwory', () =
           expect(queryByText(/No songs/i)).toBeFalsy();
           
           // Property: For any non-empty list of songs, at least the first song's title should be visible
+          // Note: FlatList may not render all items immediately, so we only check the first one
           expect(queryByText(songs[0].title)).toBeTruthy();
 
           return true;

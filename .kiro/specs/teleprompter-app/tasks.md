@@ -173,7 +173,12 @@
   - Zapewnienie że wszystkie inputy są dostępne niezależnie od liczby linijek
   - _Requirements: 2.3, 2.4_
 
-- [ ] 8. Konfiguracja MCP Playwright dla testów E2E
+- [x] 8. Konfiguracja MCP Playwright dla testów E2E
+
+
+
+
+
   - Utworzenie .kiro/settings/mcp.json z konfiguracją MCP Playwright server
   - Konfiguracja auto-approve dla podstawowych narzędzi Playwright
   - Ustawienie zmiennej środowiskowej PLAYWRIGHT_BROWSER=chromium
@@ -183,7 +188,9 @@
   - Dodanie instrukcji testowania do e2e/README.md
   - _Requirements: 11.1, 11.2_
 
-- [ ] 8.1 Napisanie test case'ów E2E dla listy utworów (MCP Playwright)
+- [x] 8.1 Napisanie test case'ów E2E dla listy utworów (MCP Playwright)
+
+
   - Utworzenie e2e/test-cases/TC-001-song-list-empty.md
   - Utworzenie e2e/test-cases/TC-002-song-creation-basic.md
   - Wykonanie testów manualnie przez MCP tools w Kiro IDE
