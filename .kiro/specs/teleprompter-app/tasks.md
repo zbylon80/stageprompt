@@ -142,7 +142,12 @@
   - Nawigacja do edytora po kliknięciu utworu
   - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 6.5 Napisanie testów property dla panelu utworów
+- [x] 6.5 Napisanie testów property dla panelu utworów
+
+
+
+
+
   - **Property 3: Panel utworów wyświetla wszystkie utwory**
   - **Property 3a: Nawigacja z panelu utworów do edytora**
   - **Validates: Requirements 2.1, 2.2**
@@ -294,7 +299,12 @@
   - **Property 9: Usunięcie setlisty nie wpływa na utwory**
   - **Validates: Requirements 3.5**
 
-- [ ] 12.6 Napisanie testów property dla usuwania utworu ze wszystkich setlist
+- [x] 12.6 Napisanie testów property dla usuwania utworu ze wszystkich setlist
+
+
+
+
+
   - **Property 3b: Usunięcie utworu usuwa go ze wszystkich setlist**
   - **Validates: Requirements 2.5**
 

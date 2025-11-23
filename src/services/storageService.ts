@@ -131,6 +131,19 @@ class StorageServiceImpl implements StorageService {
       const index = await this.loadSongsIndex();
       const newIndex = index.filter((songId) => songId !== id);
       await AsyncStorage.setItem(KEYS.SONGS_INDEX, JSON.stringify(newIndex));
+
+      // Remove song from all setlists (Requirement 2.5)
+      const setlists = await this.loadSetlists();
+      for (const setlist of setlists) {
+        if (setlist.songIds.includes(id)) {
+          const updatedSetlist = {
+            ...setlist,
+            songIds: setlist.songIds.filter((songId) => songId !== id),
+            updatedAt: Date.now(),
+          };
+          await this.saveSetlist(updatedSetlist);
+        }
+      }
     } catch (error) {
       console.error('Error deleting song:', error);
       throw new Error(ERROR_MESSAGES.deleteSong);

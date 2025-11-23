@@ -5,8 +5,9 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import fc from 'fast-check';
 import { SongListScreen } from '../SongListScreen';
-import { Song } from '../../types/models';
+import { Song, Setlist } from '../../types/models';
 import * as useSongsModule from '../../hooks/useSongs';
+import { storageService } from '../../services/storageService';
 
 // Mock the navigation
 const mockNavigate = jest.fn();
@@ -233,5 +234,188 @@ describe('Empty state', () => {
     // Verify empty state message is displayed
     expect(getByText(/No songs/i)).toBeTruthy();
     expect(getByText(/Tap the \+ button to create your first song/i)).toBeTruthy();
+  });
+});
+
+// Generator for valid setlists
+function validSetlistGenerator(): fc.Arbitrary<Setlist> {
+  return fc.record({
+    id: uniqueIdGenerator(),
+    name: fc.string({ minLength: 1, maxLength: 100 }).filter(s => s.trim().length > 0),
+    songIds: fc.array(fc.string()),
+    createdAt: fc.integer({ min: 0 }),
+    updatedAt: fc.integer({ min: 0 }),
+  });
+}
+
+/**
+ * Feature: teleprompter-app, Property 3b: Usunięcie utworu usuwa go ze wszystkich setlist
+ * Validates: Requirements 2.5
+ */
+describe('Property 3b: Usunięcie utworu usuwa go ze wszystkich setlist', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Clear storage before each test
+    return storageService.clearAll();
+  });
+
+  afterEach(() => {
+    // Clean up after each test
+    return storageService.clearAll();
+  });
+
+  it('should remove deleted song from all setlists that contain it', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.array(validSongGenerator(), { minLength: 1, maxLength: 10 }).map(songs => {
+          // Ensure unique IDs
+          return songs.map((song, index) => ({
+            ...song,
+            id: `song-${index}`,
+            lines: song.lines.map((line, lineIndex) => ({
+              ...line,
+              id: `line-${index}-${lineIndex}`,
+            })),
+          }));
+        }),
+        fc.integer({ min: 0, max: 9 }), // Index of song to delete
+        fc.array(validSetlistGenerator(), { minLength: 1, maxLength: 5 }).map(setlists => {
+          // Ensure unique IDs
+          return setlists.map((setlist, index) => ({
+            ...setlist,
+            id: `setlist-${index}`,
+          }));
+        }),
+        async (songs, deleteIndex, setlists) => {
+          // Skip if deleteIndex is out of bounds
+          if (deleteIndex >= songs.length) return true;
+
+          const songToDelete = songs[deleteIndex];
+
+          // Save all songs
+          for (const song of songs) {
+            await storageService.saveSong(song);
+          }
+
+          // Create setlists with some containing the song to be deleted
+          const setlistsWithSong = setlists.map((setlist, index) => {
+            // Make some setlists contain the song to be deleted
+            const shouldContainSong = index % 2 === 0; // Every other setlist
+            return {
+              ...setlist,
+              songIds: shouldContainSong 
+                ? [songToDelete.id, ...songs.slice(0, 2).map(s => s.id)]
+                : songs.slice(1, 3).map(s => s.id),
+            };
+          });
+
+          // Save all setlists
+          for (const setlist of setlistsWithSong) {
+            await storageService.saveSetlist(setlist);
+          }
+
+          // Count how many setlists contain the song before deletion
+          const setlistsContainingSongBefore = setlistsWithSong.filter(
+            setlist => setlist.songIds.includes(songToDelete.id)
+          ).length;
+
+          // Property: At least one setlist should contain the song (otherwise test is trivial)
+          if (setlistsContainingSongBefore === 0) return true;
+
+          // Delete the song
+          await storageService.deleteSong(songToDelete.id);
+
+          // Load all setlists after deletion
+          const setlistsAfter = await storageService.loadSetlists();
+
+          // Property: No setlist should contain the deleted song's ID
+          const setlistsContainingSongAfter = setlistsAfter.filter(
+            setlist => setlist.songIds.includes(songToDelete.id)
+          );
+
+          expect(setlistsContainingSongAfter.length).toBe(0);
+
+          // Property: The song should not exist in storage
+          const deletedSong = await storageService.loadSong(songToDelete.id);
+          expect(deletedSong).toBeNull();
+
+          // Property: Other songs should still exist
+          for (const song of songs) {
+            if (song.id !== songToDelete.id) {
+              const loadedSong = await storageService.loadSong(song.id);
+              expect(loadedSong).not.toBeNull();
+            }
+          }
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  it('should preserve setlist structure when removing song', async () => {
+    await fc.assert(
+      fc.asyncProperty(
+        fc.array(validSongGenerator(), { minLength: 3, maxLength: 10 }).map(songs => {
+          return songs.map((song, index) => ({
+            ...song,
+            id: `song-${index}`,
+            lines: song.lines.map((line, lineIndex) => ({
+              ...line,
+              id: `line-${index}-${lineIndex}`,
+            })),
+          }));
+        }),
+        fc.integer({ min: 0, max: 9 }),
+        async (songs, deleteIndex) => {
+          if (deleteIndex >= songs.length) return true;
+
+          const songToDelete = songs[deleteIndex];
+          const otherSongs = songs.filter(s => s.id !== songToDelete.id);
+
+          // Save all songs
+          for (const song of songs) {
+            await storageService.saveSong(song);
+          }
+
+          // Create a setlist with the song to delete in the middle
+          const setlist: Setlist = {
+            id: 'test-setlist',
+            name: 'Test Setlist',
+            songIds: [
+              otherSongs[0]?.id,
+              songToDelete.id,
+              otherSongs[1]?.id,
+            ].filter(Boolean),
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          };
+
+          await storageService.saveSetlist(setlist);
+
+          // Delete the song
+          await storageService.deleteSong(songToDelete.id);
+
+          // Load the setlist
+          const updatedSetlist = await storageService.loadSetlist(setlist.id);
+
+          // Property: Setlist should still exist
+          expect(updatedSetlist).not.toBeNull();
+
+          // Property: Deleted song should be removed but order of other songs preserved
+          expect(updatedSetlist!.songIds).toEqual([
+            otherSongs[0]?.id,
+            otherSongs[1]?.id,
+          ].filter(Boolean));
+
+          // Property: Setlist name should be unchanged
+          expect(updatedSetlist!.name).toBe(setlist.name);
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
   });
 });
