@@ -785,6 +785,16 @@ Razem zapewniają kompleksowe pokrycie: testy jednostkowe wychwytują konkretne 
 - Dobre wsparcie dla TypeScript
 - Snapshot testing dla komponentów UI
 
+**End-to-End Testing:** `MCP Playwright Server` (https://github.com/executeautomation/mcp-playwright)
+- Testowanie przez Model Context Protocol - umożliwia interakcję z przeglądarką przez MCP
+- Cross-browser testing (Chromium, Firefox, WebKit)
+- Testowanie aplikacji web w rzeczywistym środowisku przeglądarki
+- Automatyczne czekanie na elementy i snapshoty dostępności
+- Wsparcie dla interakcji użytkownika (kliknięcia, wpisywanie tekstu, nawigacja)
+- Screenshots i console logs dla debugowania
+- Testowanie pełnych przepływów użytkownika od początku do końca
+- Integracja z Kiro IDE przez MCP dla interaktywnego testowania
+
 ### Konfiguracja Property-Based Tests
 
 Każdy test właściwości powinien:
@@ -898,6 +908,65 @@ describe('SongListScreen - empty state', () => {
 });
 ```
 
+#### End-to-End Test - Pełny Przepływ (MCP Playwright)
+
+**Przykład 1: Zarządzanie utworami**
+
+```
+Feature: StagePrompt, E2E Test: Zarządzanie utworami
+Validates: Requirements 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4
+
+Kroki testowe z MCP Playwright:
+
+1. mcp_playwright_browser_navigate({ url: "http://localhost:8081" })
+2. mcp_playwright_browser_snapshot() - Sprawdź czy widoczny komunikat "utwórz pierwszy utwór"
+3. mcp_playwright_browser_click({ element: "przycisk Nowy Utwór", ref: "..." })
+4. mcp_playwright_browser_type({ element: "pole Tytuł", ref: "...", text: "Test Song" })
+5. mcp_playwright_browser_type({ element: "pole Wykonawca", ref: "...", text: "Test Artist" })
+6. mcp_playwright_browser_click({ element: "przycisk Dodaj Linijkę", ref: "..." })
+7. mcp_playwright_browser_fill_form({ fields: [
+     { name: "tekst linijki", type: "textbox", ref: "...", value: "First line" },
+     { name: "czas", type: "textbox", ref: "...", value: "0" }
+   ]})
+8. mcp_playwright_browser_click({ element: "przycisk Dodaj Linijkę", ref: "..." })
+9. mcp_playwright_browser_fill_form({ fields: [
+     { name: "tekst linijki", type: "textbox", ref: "...", value: "Second line" },
+     { name: "czas", type: "textbox", ref: "...", value: "5" }
+   ]})
+10. mcp_playwright_browser_navigate_back()
+11. mcp_playwright_browser_snapshot() - Sprawdź czy widoczny "Test Song" i "Test Artist"
+12. mcp_playwright_browser_take_screenshot({ filename: "song-created.png" })
+13. mcp_playwright_browser_click({ element: "przycisk Usuń", ref: "..." })
+14. mcp_playwright_browser_click({ element: "przycisk Potwierdź", ref: "..." })
+15. mcp_playwright_browser_snapshot() - Sprawdź czy lista jest pusta
+```
+
+**Przykład 2: Eksport i Import**
+
+```
+Feature: StagePrompt, E2E Test: Eksport i Import
+Validates: Requirements 12.1, 12.2, 12.3, 12.4
+
+Kroki testowe z MCP Playwright:
+
+1. mcp_playwright_browser_navigate({ url: "http://localhost:8081" })
+2. mcp_playwright_browser_click({ element: "przycisk Nowy Utwór", ref: "..." })
+3. mcp_playwright_browser_type({ element: "pole Tytuł", ref: "...", text: "Export Test Song" })
+4. mcp_playwright_browser_navigate_back()
+5. mcp_playwright_browser_click({ element: "przycisk Ustawienia", ref: "..." })
+6. mcp_playwright_browser_click({ element: "przycisk Eksportuj", ref: "..." })
+7. mcp_playwright_browser_console_messages() - Sprawdź logi eksportu
+8. mcp_playwright_browser_evaluate({ function: "() => localStorage.getItem('@songs_index')" })
+9. mcp_playwright_browser_take_screenshot({ filename: "export-complete.png" })
+```
+
+**Zalety MCP Playwright:**
+- Interaktywne testowanie bezpośrednio z Kiro IDE
+- Możliwość eksploracji aplikacji przed napisaniem testów
+- Automatyczne snapshoty dostępności (accessibility tree)
+- Łatwe debugowanie przez screenshots i console logs
+- Możliwość zapisania sesji testowej jako skryptu
+
 ### Generatory dla Property Tests
 
 Tworzymy smart generatory, które generują poprawne dane:
@@ -930,6 +999,120 @@ export const setlistGenerator = fc.record({
 });
 ```
 
+### Strategia Testów End-to-End (MCP Playwright)
+
+Testy E2E z MCP Playwright weryfikują pełne przepływy użytkownika w rzeczywistym środowisku przeglądarki przez Model Context Protocol. Skupiają się na:
+
+**Główne Przepływy do Przetestowania:**
+
+1. **Zarządzanie Utworami**
+   - Tworzenie, edycja, usuwanie utworów
+   - Dodawanie i usuwanie linijek tekstu
+   - Ustawianie timingów
+   - Walidacja danych wejściowych
+
+2. **Zarządzanie Setlistami**
+   - Tworzenie setlist
+   - Dodawanie utworów do setlist
+   - Zmiana kolejności (drag & drop)
+   - Usuwanie utworów i setlist
+
+3. **Eksport i Import**
+   - Eksport danych do JSON
+   - Import danych z JSON
+   - Walidacja formatu
+   - Round-trip testing
+
+4. **Konfiguracja**
+   - Zmiana ustawień wyglądu
+   - Mapowanie klawiszy
+   - Persystencja konfiguracji
+
+5. **Prompter**
+   - Wyświetlanie tekstu
+   - Kontrola odtwarzania
+   - Nawigacja między utworami
+   - Obsługa klawiatury
+
+**Best Practices dla Testów MCP Playwright:**
+
+- **Interaktywne eksplorowanie** - Użyj MCP tools do manualnego przetestowania przepływu przed automatyzacją
+- **Snapshoty dostępności** - Używaj `mcp_playwright_browser_snapshot()` do weryfikacji struktury UI
+- **Screenshots dla dokumentacji** - Rób screenshots kluczowych stanów aplikacji
+- **Console logs** - Sprawdzaj `mcp_playwright_browser_console_messages()` dla błędów JavaScript
+- **Evaluate dla weryfikacji** - Używaj `mcp_playwright_browser_evaluate()` do sprawdzania stanu localStorage
+- **Dokumentuj kroki** - Zapisuj sekwencje MCP calls jako dokumentację testową
+- **Testuj na różnych przeglądarkach** - Zmień `PLAYWRIGHT_BROWSER` w konfiguracji MCP
+
+**Workflow testowania z MCP:**
+
+1. **Eksploracja (Manualna)**
+   ```
+   - Uruchom: npm run web
+   - Użyj MCP tools w Kiro IDE do interakcji z aplikacją
+   - Obserwuj snapshoty i screenshots
+   - Zapisz sekwencję kroków
+   ```
+
+2. **Dokumentacja (Semi-automatyczna)**
+   ```
+   - Zapisz sekwencję MCP calls jako test case
+   - Dodaj asercje bazując na snapshotach
+   - Udokumentuj oczekiwane zachowanie
+   ```
+
+3. **Automatyzacja (Opcjonalna)**
+   ```
+   - Przekonwertuj sekwencję MCP calls na skrypt
+   - Dodaj do CI/CD pipeline
+   - Uruchamiaj regularnie
+   ```
+
+**Przykładowy Test Case (Format Dokumentacyjny):**
+
+```markdown
+## Test Case: TC-001 - Tworzenie i edycja utworu
+
+**Warunki wstępne:**
+- Aplikacja uruchomiona na http://localhost:8081
+- Brak utworów w systemie
+
+**Kroki:**
+1. Navigate: http://localhost:8081
+2. Snapshot: Weryfikuj empty state
+3. Click: "Nowy Utwór"
+4. Type: Tytuł = "Mój Utwór"
+5. Type: Wykonawca = "Artysta"
+6. Click: "Dodaj Linijkę"
+7. Fill form: tekst="Pierwsza linijka", czas="0"
+8. Screenshot: song-editor-with-line.png
+9. Navigate back
+10. Snapshot: Weryfikuj że utwór jest na liście
+
+**Oczekiwany rezultat:**
+- Utwór "Mój Utwór" widoczny na liście
+- Wykonawca "Artysta" wyświetlony
+- Jedna linijka tekstu zapisana
+
+**Validates:** Requirements 1.3, 2.1, 2.2, 2.3
+```
+
+**Struktura Dokumentacji Testów:**
+
+```
+e2e/
+├── test-cases/
+│   ├── TC-001-song-creation.md
+│   ├── TC-002-setlist-management.md
+│   ├── TC-003-export-import.md
+│   └── TC-004-prompter-flow.md
+├── screenshots/
+│   ├── song-editor-empty.png
+│   ├── song-editor-with-lines.png
+│   └── prompter-fullscreen.png
+└── README.md (instrukcje uruchamiania testów)
+```
+
 ### Pokrycie Testami
 
 **Priorytet 1 - Krytyczna Logika:**
@@ -947,10 +1130,17 @@ export const setlistGenerator = fc.record({
 - Integration tests dla krytycznych przepływów
 - Unit tests dla przypadków brzegowych
 
+**Priorytet 4 - End-to-End Flows (Playwright):**
+- Pełny przepływ zarządzania utworami (tworzenie, edycja, usuwanie)
+- Pełny przepływ zarządzania setlistami (tworzenie, dodawanie utworów, zmiana kolejności)
+- Przepływ eksportu i importu danych
+- Przepływ konfiguracji ustawień
+- Cross-platform workflow (edycja na web → eksport → weryfikacja formatu)
+
 ### Uruchamianie Testów
 
 ```bash
-# Wszystkie testy
+# Wszystkie testy jednostkowe i property-based
 npm test
 
 # Tylko property tests
@@ -961,7 +1151,58 @@ npm test -- --coverage
 
 # Watch mode podczas developmentu
 npm test -- --watch
+
+# Testy end-to-end z MCP Playwright
+# Uruchom aplikację web w osobnym terminalu: npm run web
+# Następnie użyj narzędzi MCP Playwright w Kiro IDE do interaktywnego testowania
 ```
+
+### Konfiguracja MCP Playwright
+
+**Konfiguracja MCP Server:**
+
+Aplikacja używa MCP Playwright Server do testowania E2E. Konfiguracja w `.kiro/settings/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@executeautomation/mcp-playwright"],
+      "env": {
+        "PLAYWRIGHT_BROWSER": "chromium"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "mcp_playwright_browser_navigate",
+        "mcp_playwright_browser_snapshot",
+        "mcp_playwright_browser_click",
+        "mcp_playwright_browser_type",
+        "mcp_playwright_browser_take_screenshot"
+      ]
+    }
+  }
+}
+```
+
+**Dostępne narzędzia MCP Playwright:**
+
+- `mcp_playwright_browser_navigate` - Nawigacja do URL
+- `mcp_playwright_browser_snapshot` - Snapshot dostępności strony
+- `mcp_playwright_browser_click` - Kliknięcie elementu
+- `mcp_playwright_browser_type` - Wpisywanie tekstu
+- `mcp_playwright_browser_fill_form` - Wypełnianie formularzy
+- `mcp_playwright_browser_take_screenshot` - Robienie screenshotów
+- `mcp_playwright_browser_console_messages` - Pobieranie logów konsoli
+- `mcp_playwright_browser_evaluate` - Wykonywanie JavaScript
+- `mcp_playwright_browser_close` - Zamykanie przeglądarki
+
+**Workflow testowania z MCP:**
+
+1. Uruchom aplikację web: `npm run web`
+2. Użyj narzędzi MCP Playwright do interakcji z aplikacją
+3. Weryfikuj zachowanie przez snapshoty i screenshots
+4. Zapisuj testy jako skrypty do automatyzacji
 
 ## Platform-Specific Considerations
 
