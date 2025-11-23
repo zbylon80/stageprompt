@@ -150,13 +150,34 @@ export type PrompterAction = 'nextSong' | 'prevSong' | 'pause';
 
 ### Główne Ekrany
 
-#### 1. SongListScreen
+#### 1. SetlistListScreen (Główny Widok)
 
 **Odpowiedzialność:**
-- Wyświetlanie listy utworów
-- Nawigacja do edytora
+- Wyświetlanie listy setlist jako główny widok aplikacji
+- Nawigacja do edytora setlisty
+- Tworzenie nowych setlist
+- Dostęp do panelu utworów
+
+**Props:**
+```typescript
+interface SetlistListScreenProps {
+  navigation: NavigationProp<RootStackParamList>;
+}
+```
+
+**Kluczowe Komponenty:**
+- `FlatList` z `SetlistListItem`
+- FAB (Floating Action Button) dla nowej setlisty
+- Przycisk dostępu do panelu utworów
+- Empty state component
+
+#### 2. SongListScreen (Panel Utworów)
+
+**Odpowiedzialność:**
+- Wyświetlanie listy wszystkich utworów
+- Nawigacja do edytora utworu
 - Tworzenie nowych utworów
-- Dodawanie do setlist
+- Usuwanie utworów
 
 **Props:**
 ```typescript
@@ -170,7 +191,7 @@ interface SongListScreenProps {
 - FAB (Floating Action Button) dla nowego utworu
 - Empty state component
 
-#### 2. SongEditorScreen
+#### 3. SongEditorScreen
 
 **Odpowiedzialność:**
 - Edycja metadanych utworu (tytuł, artysta)
@@ -189,17 +210,25 @@ interface EditorState {
 - Header z polami tytuł/artysta
 - `FlatList` z `LyricLineEditor` (każda linijka ma pole do wprowadzenia czasu)
 
-#### 3. SetlistEditorScreen
+#### 4. SetlistEditorScreen (z Panelem Utworów)
 
 **Odpowiedzialność:**
-- Tworzenie i edycja setlist
-- Dodawanie/usuwanie utworów
-- Drag & drop reordering
+- Edycja nazwy setlisty
+- Wyświetlanie utworów w setliście
+- Wyświetlanie panelu wszystkich dostępnych utworów obok
+- Drag & drop utworów z panelu do setlisty
+- Drag & drop reordering utworów w setliście
+- Usuwanie utworów z setlisty
+
+**Layout:**
+- Na web/desktop: Split view (setlista po lewej, panel utworów po prawej)
+- Na mobile: Tabs lub modal z listą utworów
 
 **Biblioteki:**
 - `react-native-draggable-flatlist` dla reordering
+- `react-native-gesture-handler` dla drag & drop między panelami
 
-#### 4. PrompterScreen
+#### 5. PrompterScreen
 
 **Odpowiedzialność:**
 - Fullscreen display tekstu
@@ -223,7 +252,7 @@ interface PrompterState {
 - Animated scroll
 - Key event handling
 
-#### 5. SettingsScreen
+#### 6. SettingsScreen
 
 **Odpowiedzialność:**
 - Konfiguracja wyglądu promptera
@@ -483,65 +512,83 @@ export function generateId(): string {
 
 *Właściwość to charakterystyka lub zachowanie, które powinno być prawdziwe dla wszystkich poprawnych wykonań systemu - zasadniczo formalne stwierdzenie o tym, co system powinien robić. Właściwości służą jako pomost między specyfikacją czytelną dla człowieka a gwarancjami poprawności weryfikowalnymi maszynowo.*
 
-### Property 1: Lista utworów wyświetla wszystkie zapisane utwory
+### Property 1: Lista setlist wyświetla wszystkie zapisane setlisty
 
-*Dla dowolnej* listy utworów zapisanych w storage, otwarcie aplikacji powinno wyświetlić wszystkie utwory z poprawnymi tytułami i wykonawcami.
+*Dla dowolnej* listy setlist zapisanych w storage, otwarcie aplikacji powinno wyświetlić wszystkie setlisty z poprawnymi nazwami i liczbą utworów.
 
 **Validates: Requirements 1.1**
 
-### Property 2: Nawigacja do edytora przekazuje poprawny utwór
+### Property 2: Nawigacja do edytora setlisty przekazuje poprawną setlistę
 
-*Dla dowolnego* utworu na liście, dotknięcie tego utworu powinno nawigować do edytora z tym samym utworem (sprawdzając ID i zawartość).
+*Dla dowolnej* setlisty na liście, dotknięcie tej setlisty powinno nawigować do edytora z tą samą setlistą (sprawdzając ID i zawartość).
 
 **Validates: Requirements 1.2**
 
-### Property 3: Dodawanie linijki zwiększa liczbę linijek
+### Property 3: Panel utworów wyświetla wszystkie utwory
+
+*Dla dowolnej* listy utworów zapisanych w storage, otwarcie panelu utworów powinno wyświetlić wszystkie utwory z poprawnymi tytułami i wykonawcami.
+
+**Validates: Requirements 2.1**
+
+### Property 3a: Nawigacja z panelu utworów do edytora
+
+*Dla dowolnego* utworu w panelu utworów, dotknięcie tego utworu powinno nawigować do edytora z tym samym utworem (sprawdzając ID i zawartość).
+
+**Validates: Requirements 2.2, 3.6**
+
+### Property 3b: Usunięcie utworu usuwa go ze wszystkich setlist
+
+*Dla dowolnego* utworu który jest w jednej lub więcej setlistach, usunięcie tego utworu powinno usunąć jego ID ze wszystkich setlist które go zawierały.
+
+**Validates: Requirements 2.5**
+
+### Property 4: Dodawanie linijki zwiększa liczbę linijek
 
 *Dla dowolnego* utworu, dodanie nowej linijki tekstu powinno zwiększyć liczbę linijek o 1 i nowa linijka powinna mieć unikalne ID różne od wszystkich istniejących.
 
-**Validates: Requirements 2.3**
+**Validates: Requirements 4.3**
 
-### Property 4: Usuwanie linijki zmniejsza liczbę linijek
+### Property 5: Usuwanie linijki zmniejsza liczbę linijek
 
 *Dla dowolnego* utworu z co najmniej jedną linijką, usunięcie linijki powinno zmniejszyć liczbę linijek o 1 i usunięta linijka nie powinna już istnieć w utworze.
 
-**Validates: Requirements 2.4**
+**Validates: Requirements 4.4**
 
-### Property 5: Modyfikacja metadanych aktualizuje utwór
+### Property 5a: Modyfikacja metadanych aktualizuje utwór
 
 *Dla dowolnego* utworu i dowolnych nowych wartości tytułu/wykonawcy, modyfikacja powinna zaktualizować dane utworu i zmiany powinny być widoczne natychmiast.
 
-**Validates: Requirements 2.2**
-
-### Property 6: Kolejność utworów w setliście jest zachowana
-
-*Dla dowolnej* setlisty i dowolnej sekwencji utworów dodawanych po kolei, tablica songIds powinna odzwierciedlać dokładnie tę samą kolejność.
-
 **Validates: Requirements 4.2**
+
+### Property 6: Przeciągnięcie utworu dodaje go do setlisty
+
+*Dla dowolnej* setlisty i dowolnego utworu z panelu utworów, przeciągnięcie utworu do setlisty powinno dodać jego ID do songIds w miejscu upuszczenia.
+
+**Validates: Requirements 3.2**
 
 ### Property 7: Zmiana kolejności aktualizuje songIds
 
 *Dla dowolnej* setlisty z utworami, zmiana kolejności utworów (np. przeniesienie z pozycji i na pozycję j) powinna zaktualizować tablicę songIds tak, aby odzwierciedlała nową kolejność.
 
-**Validates: Requirements 4.3**
+**Validates: Requirements 3.3**
 
 ### Property 8: Usunięcie utworu z setlisty nie usuwa utworu
 
 *Dla dowolnej* setlisty zawierającej utwór, usunięcie tego utworu z setlisty powinno usunąć jego ID z songIds, ale utwór powinien nadal istnieć w głównej liście utworów.
 
-**Validates: Requirements 4.4**
+**Validates: Requirements 3.4**
 
 ### Property 9: Usunięcie setlisty nie wpływa na utwory
 
 *Dla dowolnej* setlisty zawierającej utwory, usunięcie setlisty nie powinno usunąć żadnego z utworów z głównej listy utworów.
 
-**Validates: Requirements 4.5**
+**Validates: Requirements 3.5**
 
 ### Property 10: Algorytm przewijania - interpolacja liniowa
 
 *Dla dowolnych* dwóch kolejnych linijek z czasami t0 i t1, oraz dowolnego czasu currentTime gdzie t0 < currentTime < t1, obliczona pozycja scrollY powinna być liniową interpolacją między pozycjami tych linijek: `y = y0 + (y1 - y0) * ((currentTime - t0) / (t1 - t0))`.
 
-**Validates: Requirements 5.6**
+**Validates: Requirements 4.5 (poprzednio 5.6)**
 
 ### Property 11: Pauza i wznowienie zachowuje pozycję
 

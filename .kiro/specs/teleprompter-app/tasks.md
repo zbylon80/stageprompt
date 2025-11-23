@@ -95,7 +95,40 @@
   - **Property 10: Algorytm przewijania - interpolacja liniowa**
   - **Validates: Requirements 5.6**
 
-- [x] 6. Implementacja ekranu listy utworów (SongListScreen)
+- [x] 6. Implementacja ekranu listy setlist jako głównego widoku (SetlistListScreen)
+
+
+
+
+
+  - Utworzenie screens/SetlistListScreen.tsx
+  - Utworzenie components/SetlistListItem.tsx
+  - Implementacja FlatList z wyświetlaniem setlist (nazwa, liczba utworów)
+  - Implementacja FAB dla tworzenia nowej setlisty
+  - Implementacja przycisku dostępu do panelu utworów
+  - Implementacja empty state (komunikat gdy brak setlist)
+  - Nawigacja do edytora setlisty po kliknięciu
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+
+- [x] 6.1 Napisanie testów property dla wyświetlania listy setlist
+
+
+  - **Property 1: Lista setlist wyświetla wszystkie zapisane setlisty**
+  - **Validates: Requirements 1.1**
+
+- [x] 6.2 Napisanie testów property dla nawigacji do edytora setlisty
+
+
+  - **Property 2: Nawigacja do edytora setlisty przekazuje poprawną setlistę**
+  - **Validates: Requirements 1.2**
+
+- [x] 6.3 Napisanie testu unit dla empty state
+
+
+  - Test przypadku brzegowego: pusta lista setlist
+  - _Requirements: 1.4_
+
+- [x] 6.4 Implementacja ekranu listy utworów jako panelu (SongListScreen)
 
 
 
@@ -107,25 +140,12 @@
   - Implementacja FAB dla tworzenia nowego utworu
   - Implementacja empty state (komunikat gdy brak utworów)
   - Nawigacja do edytora po kliknięciu utworu
-  - _Requirements: 1.1, 1.2, 1.3, 1.5_
+  - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [x] 6.1 Napisanie testów property dla wyświetlania listy
-
-
-  - **Property 1: Lista utworów wyświetla wszystkie zapisane utwory**
-  - **Validates: Requirements 1.1**
-
-- [x] 6.2 Napisanie testów property dla nawigacji
-
-
-  - **Property 2: Nawigacja do edytora przekazuje poprawny utwór**
-  - **Validates: Requirements 1.2**
-
-- [x] 6.3 Napisanie testu unit dla empty state
-
-
-  - Test przypadku brzegowego: pusta lista utworów
-  - _Requirements: 1.5_
+- [ ] 6.5 Napisanie testów property dla panelu utworów
+  - **Property 3: Panel utworów wyświetla wszystkie utwory**
+  - **Property 3a: Nawigacja z panelu utworów do edytora**
+  - **Validates: Requirements 2.1, 2.2**
 
 - [x] 7. Implementacja ekranu edytora utworu (SongEditorScreen)
 
@@ -188,7 +208,7 @@
   - Dodanie instrukcji testowania do e2e/README.md
   - _Requirements: 11.1, 11.2_
 
-- [x] 8.1 Napisanie test case'ów E2E dla listy utworów (MCP Playwright)
+- [x]* 8.1 Napisanie test case'ów E2E dla listy utworów (MCP Playwright)
 
 
   - Utworzenie e2e/test-cases/TC-001-song-list-empty.md
@@ -206,7 +226,7 @@
 
   - Ensure all tests pass, ask the user if questions arise.
 
-- [x] 10. Napisanie test case'ów E2E dla edytora utworu (MCP Playwright)
+- [x]* 10. Napisanie test case'ów E2E dla edytora utworu (MCP Playwright)
 
 
 
@@ -220,7 +240,7 @@
   - Screenshots: editor-empty.png, editor-with-lyrics.png
   - **Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5**
 
-- [x] 11. Checkpoint - Weryfikacja testów E2E dla utworów
+- [x]* 11. Checkpoint - Weryfikacja testów E2E dla utworów
 
 
 
@@ -232,33 +252,54 @@
   - Fix błędów wykrytych podczas testowania
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Implementacja zarządzania setlistami
-  - Utworzenie screens/SetlistEditorScreen.tsx
-  - Implementacja tworzenia nowej setlisty (prompt dla nazwy)
-  - Implementacja dodawania utworów do setlisty
+- [x] 12. Implementacja edytora setlisty z panelem utworów
+
+
+
+
+
+  - Utworzenie screens/SetlistEditorScreen.tsx z split view layout
+  - Implementacja edycji nazwy setlisty
+  - Implementacja wyświetlania utworów w setliście (lewa strona)
+  - Implementacja panelu wszystkich utworów (prawa strona)
   - Instalacja i konfiguracja react-native-draggable-flatlist
-  - Implementacja drag & drop dla zmiany kolejności
+  - Implementacja drag & drop utworów z panelu do setlisty
+  - Implementacja drag & drop dla zmiany kolejności w setliście
   - Implementacja usuwania utworów z setlisty
   - Implementacja usuwania całej setlisty
-  - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+  - Implementacja nawigacji do edytora utworu z panelu
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-- [ ] 12.1 Napisanie testów property dla kolejności w setliście
-  - **Property 6: Kolejność utworów w setliście jest zachowana**
+- [x] 12.1 Napisanie testów property dla przeciągania utworów
+
+
+  - **Property 6: Przeciągnięcie utworu dodaje go do setlisty**
   - **Validates: Requirements 3.2**
 
-- [ ] 12.2 Napisanie testów property dla zmiany kolejności
+- [x] 12.2 Napisanie testów property dla zmiany kolejności
+
+
   - **Property 7: Zmiana kolejności aktualizuje songIds**
   - **Validates: Requirements 3.3**
 
-- [ ] 12.3 Napisanie testów property dla usuwania z setlisty
+- [x] 12.3 Napisanie testów property dla usuwania z setlisty
+
+
   - **Property 8: Usunięcie utworu z setlisty nie usuwa utworu**
   - **Validates: Requirements 3.4**
 
-- [ ] 12.4 Napisanie testów property dla usuwania setlisty
+- [x] 12.4 Napisanie testów property dla usuwania setlisty
+
+
   - **Property 9: Usunięcie setlisty nie wpływa na utwory**
   - **Validates: Requirements 3.5**
 
-- [ ] 12.5 Napisanie test case'ów E2E dla setlist (MCP Playwright)
+- [ ] 12.6 Napisanie testów property dla usuwania utworu ze wszystkich setlist
+  - **Property 3b: Usunięcie utworu usuwa go ze wszystkich setlist**
+  - **Validates: Requirements 2.5**
+
+- [x]* 12.5 Napisanie test case'ów E2E dla setlist (MCP Playwright)
+
   - Utworzenie e2e/test-cases/TC-006-setlist-creation.md
   - Utworzenie e2e/test-cases/TC-007-setlist-management.md
   - Utworzenie e2e/test-cases/TC-008-setlist-reorder.md
@@ -266,7 +307,7 @@
   - Screenshots: setlist-empty.png, setlist-with-songs.png
   - **Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5**
 
-- [ ] 13. Checkpoint - Weryfikacja testów E2E dla setlist
+- [ ]* 13. Checkpoint - Weryfikacja testów E2E dla setlist
   - Przejście przez test case'y TC-006 do TC-008
   - Weryfikacja drag & drop functionality
   - Fix błędów wykrytych podczas testowania
@@ -312,7 +353,7 @@
   - Test ostatniego utworu w setliście
   - _Requirements: 5.5_
 
-- [ ] 16.4 Napisanie test case'ów E2E dla promptera (MCP Playwright)
+- [ ]* 16.4 Napisanie test case'ów E2E dla promptera (MCP Playwright)
   - Utworzenie e2e/test-cases/TC-009-prompter-display.md
   - Utworzenie e2e/test-cases/TC-010-prompter-controls.md
   - Utworzenie e2e/test-cases/TC-011-prompter-scrolling.md
@@ -321,7 +362,7 @@
   - Screenshots: prompter-paused.png, prompter-playing.png
   - **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5**
 
-- [ ] 17. Checkpoint - Weryfikacja testów E2E dla promptera
+- [ ]* 17. Checkpoint - Weryfikacja testów E2E dla promptera
   - Przejście przez test case'y TC-009 do TC-011
   - Weryfikacja że scrollowanie działa płynnie
   - Testowanie kontroli play/pause/next/prev
@@ -374,7 +415,7 @@
   - **Property 21: Round-trip persystencji ustawień**
   - **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
 
-- [ ] 20.2 Napisanie test case'ów E2E dla ustawień (MCP Playwright)
+- [ ]* 20.2 Napisanie test case'ów E2E dla ustawień (MCP Playwright)
   - Utworzenie e2e/test-cases/TC-012-settings-appearance.md
   - Utworzenie e2e/test-cases/TC-013-settings-persistence.md
   - Testowanie sliderów i color pickerów przez MCP fill_form
@@ -397,14 +438,14 @@
   - **Property 19: Czyszczenie mapowania usuwa powiązanie**
   - **Validates: Requirements 7.2, 7.3, 7.4, 7.5**
 
-- [ ] 21.2 Napisanie test case'ów E2E dla mapowania klawiszy (MCP Playwright)
+- [ ]* 21.2 Napisanie test case'ów E2E dla mapowania klawiszy (MCP Playwright)
   - Utworzenie e2e/test-cases/TC-014-key-mapping.md
   - Testowanie "learn mode" przez symulację key events
   - Użycie mcp_playwright_browser_press_key do symulacji klawiszy
   - Weryfikacja mapowań przez snapshoty UI
   - **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
 
-- [ ] 22. Checkpoint - Weryfikacja testów E2E dla ustawień
+- [ ]* 22. Checkpoint - Weryfikacja testów E2E dla ustawień
   - Przejście przez test case'y TC-012 do TC-014
   - Weryfikacja że ustawienia są persystowane
   - Testowanie mapowania klawiszy
@@ -430,7 +471,7 @@
   - **Property 30: Cross-platform kompatybilność danych**
   - **Validates: Requirements 12.4, 12.5**
 
-- [ ] 23.3 Napisanie test case'ów E2E dla eksportu/importu (MCP Playwright)
+- [ ]* 23.3 Napisanie test case'ów E2E dla eksportu/importu (MCP Playwright)
   - Utworzenie e2e/test-cases/TC-015-export-import.md
   - Utworzenie e2e/test-cases/TC-016-cross-platform-workflow.md
   - Użycie mcp_playwright_browser_evaluate do weryfikacji localStorage
@@ -438,7 +479,7 @@
   - Testowanie round-trip (eksport → import → weryfikacja)
   - **Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5, 13.1, 13.2, 13.3, 13.4, 13.5**
 
-- [ ] 24. Checkpoint - Weryfikacja testów E2E dla eksportu/importu
+- [ ]* 24. Checkpoint - Weryfikacja testów E2E dla eksportu/importu
   - Przejście przez test case'y TC-015 do TC-016
   - Weryfikacja że dane są poprawnie eksportowane i importowane
   - Testowanie kompatybilności cross-platform

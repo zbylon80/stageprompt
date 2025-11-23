@@ -1,6 +1,6 @@
-// screens/SongListScreen.tsx
+// screens/SetlistListScreen.tsx
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   StyleSheet,
   Text,
@@ -11,65 +11,68 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { useSongs } from '../hooks/useSongs';
-import { SongListItem } from '../components/SongListItem';
+import { useSetlists } from '../hooks/useSetlists';
 import { RootStackParamList } from '../types/navigation';
-import { Song } from '../types/models';
-import { generateId } from '../utils/idGenerator';
+import { Setlist } from '../types/models';
 
-type SongListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SongList'>;
+type SetlistListScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
-interface SongListScreenProps {
-  navigation: SongListScreenNavigationProp;
+interface SetlistListScreenProps {
+  navigation: SetlistListScreenNavigationProp;
 }
 
-export function SongListScreen({ navigation }: SongListScreenProps) {
-  const { songs, loading, error, reload } = useSongs();
+export function SetlistListScreen({ navigation }: SetlistListScreenProps) {
+  const { setlists, loading, error, reload } = useSetlists();
 
-  // Reload songs when screen comes into focus
+  // Reload setlists when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       reload();
     }, [reload])
   );
 
-  const handleSongPress = (song: Song) => {
-    navigation.navigate('SongEditor', { song });
+  const handleSetlistPress = (setlist: Setlist) => {
+    navigation.navigate('SetlistEditor', { setlistId: setlist.id });
   };
 
-  const handleNewSong = () => {
-    const newSong: Song = {
-      id: generateId(),
-      title: '',
-      artist: '',
-      lines: [],
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    navigation.navigate('SongEditor', { song: newSong });
+  const handleNewSetlist = () => {
+    navigation.navigate('SetlistEditor', {});
+  };
+
+  const handleBrowseSongs = () => {
+    navigation.navigate('SongList');
   };
 
   const renderEmptyState = () => (
     <View style={styles.emptyContainer}>
-      <Text style={styles.emptyTitle}>No songs</Text>
+      <Text style={styles.emptyTitle}>No setlists</Text>
       <Text style={styles.emptyText}>
-        Tap the + button to create your first song
-      </Text>
-      <Text style={styles.emptySubtext}>
-        Use the ♫ button to create setlists
+        Tap the + button to create your first setlist
       </Text>
     </View>
   );
 
-  const renderItem = ({ item }: { item: Song }) => (
-    <SongListItem song={item} onPress={handleSongPress} />
+  const renderItem = ({ item }: { item: Setlist }) => (
+    <TouchableOpacity
+      style={styles.setlistItem}
+      onPress={() => handleSetlistPress(item)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.setlistInfo}>
+        <Text style={styles.setlistName}>{item.name}</Text>
+        <Text style={styles.setlistDetails}>
+          {item.songIds.length} {item.songIds.length === 1 ? 'song' : 'songs'}
+        </Text>
+      </View>
+      <Text style={styles.chevron}>›</Text>
+    </TouchableOpacity>
   );
 
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#4a9eff" />
-        <Text style={styles.loadingText}>Loading songs...</Text>
+        <ActivityIndicator size="large" color="#9b59b6" />
+        <Text style={styles.loadingText}>Loading setlists...</Text>
       </View>
     );
   }
@@ -82,31 +85,27 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
     );
   }
 
-  const handleSetlistsPress = () => {
-    navigation.navigate('SetlistList');
-  };
-
   return (
     <View style={styles.container}>
       <FlatList
-        data={songs}
+        data={setlists}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={
-          songs.length === 0 ? styles.emptyListContent : styles.listContent
+          setlists.length === 0 ? styles.emptyListContent : styles.listContent
         }
         ListEmptyComponent={renderEmptyState}
       />
       <TouchableOpacity
-        style={styles.fabSetlists}
-        onPress={handleSetlistsPress}
+        style={styles.fabSongs}
+        onPress={handleBrowseSongs}
         activeOpacity={0.8}
       >
-        <Text style={styles.fabSetlistsText}>♫</Text>
+        <Text style={styles.fabSongsText}>♪</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={styles.fab}
-        onPress={handleNewSong}
+        onPress={handleNewSetlist}
         activeOpacity={0.8}
       >
         <Text style={styles.fabText}>+</Text>
@@ -151,13 +150,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#666666',
-    textAlign: 'center',
-    lineHeight: 20,
-    marginTop: 8,
-  },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
@@ -168,6 +160,55 @@ const styles = StyleSheet.create({
     color: '#ff6b6b',
     textAlign: 'center',
   },
+  setlistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2a2a2a',
+    padding: 16,
+    marginHorizontal: 16,
+    marginVertical: 4,
+    borderRadius: 8,
+  },
+  setlistInfo: {
+    flex: 1,
+  },
+  setlistName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  setlistDetails: {
+    fontSize: 14,
+    color: '#999999',
+  },
+  chevron: {
+    fontSize: 28,
+    color: '#666666',
+    marginLeft: 8,
+  },
+  fabSongs: {
+    position: 'absolute',
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#4a9eff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+  },
+  fabSongsText: {
+    fontSize: 28,
+    color: '#ffffff',
+    fontWeight: '400',
+    lineHeight: 28,
+  },
   fab: {
     position: 'absolute',
     right: 20,
@@ -175,7 +216,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#4a9eff',
+    backgroundColor: '#9b59b6',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 6,
@@ -189,26 +230,5 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '300',
     lineHeight: 32,
-  },
-  fabSetlists: {
-    position: 'absolute',
-    right: 20,
-    bottom: 150,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#9b59b6',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-  },
-  fabSetlistsText: {
-    fontSize: 28,
-    color: '#ffffff',
-    fontWeight: '400',
   },
 });

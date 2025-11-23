@@ -25,17 +25,42 @@ Workflow zakłada, że użytkownik przygotowuje materiały na komputerze, ekspor
 
 ### Wymaganie 1
 
-**User Story:** Jako użytkownik, chcę przeglądać listę moich utworów, aby móc wybrać utwór do edycji lub dodać do setlisty.
+**User Story:** Jako użytkownik, chcę przeglądać listę moich setlist jako główny widok aplikacji, aby szybko zarządzać moimi występami.
 
 #### Kryteria Akceptacji
 
-1. WHEN użytkownik otwiera aplikację THEN System SHALL wyświetlić listę wszystkich zapisanych utworów z ich tytułami i wykonawcami
-2. WHEN użytkownik dotyka utworu na liście THEN System SHALL przejść do ekranu edytora dla tego utworu
-3. WHEN użytkownik dotyka przycisku "Nowy Utwór" THEN System SHALL utworzyć nowy pusty utwór i przejść do edytora
-4. WHEN użytkownik dotyka "Dodaj do Setlisty" dla utworu THEN System SHALL wyświetlić listę dostępnych setlist do wyboru
-5. WHEN lista utworów jest pusta THEN System SHALL wyświetlić komunikat zachęcający do utworzenia pierwszego utworu
+1. WHEN użytkownik otwiera aplikację THEN System SHALL wyświetlić listę wszystkich zapisanych setlist z ich nazwami i liczbą utworów
+2. WHEN użytkownik dotyka setlisty na liście THEN System SHALL przejść do ekranu edytora setlisty
+3. WHEN użytkownik dotyka przycisku "Nowa Setlista" THEN System SHALL utworzyć nową pustą setlistę i przejść do edytora
+4. WHEN lista setlist jest pusta THEN System SHALL wyświetlić komunikat zachęcający do utworzenia pierwszej setlisty
+5. WHEN użytkownik dotyka przycisku dostępu do utworów THEN System SHALL otworzyć panel z listą wszystkich utworów
 
 ### Wymaganie 2
+
+**User Story:** Jako użytkownik, chcę przeglądać i zarządzać moimi utworami w osobnym panelu, aby móc je edytować lub dodawać do setlist.
+
+#### Kryteria Akceptacji
+
+1. WHEN użytkownik otwiera panel utworów THEN System SHALL wyświetlić listę wszystkich zapisanych utworów z ich tytułami i wykonawcami
+2. WHEN użytkownik dotyka utworu w panelu THEN System SHALL przejść do ekranu edytora dla tego utworu
+3. WHEN użytkownik dotyka przycisku "Nowy Utwór" THEN System SHALL utworzyć nowy pusty utwór i przejść do edytora
+4. WHEN lista utworów jest pusta THEN System SHALL wyświetlić komunikat zachęcający do utworzenia pierwszego utworu
+5. WHEN użytkownik usuwa utwór THEN System SHALL usunąć utwór i usunąć jego ID ze wszystkich setlist które go zawierały
+
+### Wymaganie 3
+
+**User Story:** Jako użytkownik, chcę zarządzać setlistami z panelem utworów obok, aby łatwo dodawać utwory przez przeciąganie.
+
+#### Kryteria Akceptacji
+
+1. WHEN użytkownik otwiera edytor setlisty THEN System SHALL wyświetlić nazwę setlisty, listę utworów w setliście oraz panel z wszystkimi dostępnymi utworami
+2. WHEN użytkownik przeciąga utwór z panelu utworów do setlisty THEN System SHALL dodać ID utworu do setlisty w miejscu upuszczenia
+3. WHEN użytkownik zmienia kolejność utworów w setliście przez przeciąganie THEN System SHALL zaktualizować tablicę songIds aby odzwierciedlić nową kolejność
+4. WHEN użytkownik usuwa utwór z setlisty THEN System SHALL usunąć ID tego utworu z setlisty bez usuwania samego utworu
+5. WHEN użytkownik usuwa setlistę THEN System SHALL usunąć setlistę bez wpływu na utwory które zawierała
+6. WHEN użytkownik dotyka utworu w panelu utworów THEN System SHALL przejść do edytora tego utworu
+
+### Wymaganie 4
 
 **User Story:** Jako użytkownik, chcę edytować tekst utworu i przypisywać czasy do linijek, aby przygotować utwór do wyświetlenia w teleprompterze.
 
@@ -46,18 +71,6 @@ Workflow zakłada, że użytkownik przygotowuje materiały na komputerze, ekspor
 3. WHEN użytkownik dodaje nową linijkę tekstu THEN System SHALL utworzyć nowy LyricLine z unikalnym ID i domyślną wartością czasu
 4. WHEN użytkownik usuwa linijkę tekstu THEN System SHALL usunąć tę linijkę z utworu i zaktualizować wyświetlanie
 5. WHEN użytkownik ręcznie wprowadza wartość czasu dla linijki THEN System SHALL zwalidować i zapisać wartość timeSeconds dla tego LyricLine
-
-### Wymaganie 3
-
-**User Story:** Jako użytkownik, chcę tworzyć i zarządzać setlistami, aby organizować utwory w kolejności występu.
-
-#### Kryteria Akceptacji
-
-1. WHEN użytkownik tworzy nową setlistę THEN System SHALL poprosić o nazwę setlisty i utworzyć pustą setlistę z unikalnym ID
-2. WHEN użytkownik dodaje utwory do setlisty THEN System SHALL zapisać ID utworów w kolejności ich dodania
-3. WHEN użytkownik zmienia kolejność utworów w setliście THEN System SHALL zaktualizować tablicę songIds aby odzwierciedlić nową kolejność
-4. WHEN użytkownik usuwa utwór z setlisty THEN System SHALL usunąć ID tego utworu z setlisty bez usuwania samego utworu
-5. WHEN użytkownik usuwa setlistę THEN System SHALL usunąć setlistę bez wpływu na utwory które zawierała
 
 ### Wymaganie 5
 
