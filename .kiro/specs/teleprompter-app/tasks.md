@@ -334,7 +334,73 @@
   - Implementacja wyświetlania tekstu (duża czcionka, ciemne tło)
   - Implementacja FlatList z linijkami tekstu
   - Zastosowanie ustawień wyglądu (fontSize, colors, margins)
+  - Dodanie przycisków nawigacji i wyjścia
+  - Dodanie wyszukiwania i sortowania list utworów
   - _Requirements: 4.1_
+
+- [ ] 14.1. Rozszerzenie modelu danych o sekcje utworów
+  - Dodanie typu `SectionType` i interfejsu `SongSection` do `types/models.ts`
+  - Dodanie opcjonalnego pola `section` do interfejsu `LyricLine`
+  - Zapewnienie kompatybilności wstecznej z istniejącymi utworami
+  - _Feature: Song Sections_
+
+- [ ] 14.2. Utworzenie utilities dla sekcji
+  - Utworzenie `utils/sectionLabels.ts`
+  - Implementacja `getSectionLabel()` - zwraca etykietę dla sekcji
+  - Implementacja `getNextVerseNumber()` - oblicza następny numer zwrotki
+  - Implementacja `SECTION_COLORS` - mapowanie kolorów dla typów sekcji
+  - Dodanie `validateSection()` do `utils/validation.ts`
+  - _Feature: Song Sections_
+
+- [ ] 14.3. Komponent SectionMarker
+  - Utworzenie `components/SectionMarker.tsx`
+  - Implementacja wyświetlania kolorowego badge'a z etykietą
+  - Wsparcie dla różnych rozmiarów (small, medium, large)
+  - Opcjonalna funkcja `onEdit` dla trybu edycji
+  - _Feature: Song Sections_
+
+- [ ] 14.4. Komponent SectionPicker
+  - Utworzenie `components/SectionPicker.tsx`
+  - Implementacja dropdown z typami sekcji (Verse, Chorus, Bridge, Intro, Outro, Instrumental, Custom)
+  - Automatyczna numeracja dla zwrotek
+  - Input dla niestandardowych etykiet (Custom)
+  - Opcja usunięcia sekcji
+  - _Feature: Song Sections_
+
+- [ ] 14.5. Integracja sekcji z LyricLineEditor
+  - Dodanie przycisku "+ Section" lub ikony 🏷️ do `components/LyricLineEditor.tsx`
+  - Wyświetlanie `SectionMarker` gdy linijka ma sekcję
+  - Integracja z `SectionPicker` do dodawania/edycji sekcji
+  - Obsługa usuwania sekcji
+  - _Feature: Song Sections_
+
+- [ ] 14.6. Aktualizacja SongEditorScreen dla sekcji
+  - Przekazywanie informacji o sekcjach do `LyricLineEditor`
+  - Obsługa zapisywania sekcji wraz z utworem
+  - Obliczanie `nextVerseNumber` dla nowych zwrotek
+  - Aktualizacja `storageService.ts` do obsługi opcjonalnego pola `section`
+  - _Feature: Song Sections_
+
+- [ ] 14.7. Integracja sekcji z PrompterScreen
+  - Modyfikacja `renderLine` do wyświetlania znaczników sekcji
+  - Wyświetlanie `SectionMarker` tylko przy pierwszej linijce sekcji
+  - Zastosowanie ustawień wyglądu do znaczników
+  - Stylowanie znaczników w prompterze (duża czcionka, wyraźne kolory)
+  - _Feature: Song Sections_
+
+- [ ] 14.8. Eksport i import sekcji
+  - Upewnienie się że `exportImportService.ts` zachowuje sekcje
+  - Walidacja sekcji podczas importu
+  - Obsługa błędnych danych sekcji (ignorowanie, nie blokowanie importu)
+  - Testowanie round-trip z sekcjami
+  - _Feature: Song Sections_
+
+- [ ]* 14.9. Testy dla sekcji utworów
+  - Testy jednostkowe dla `getSectionLabel()`, `getNextVerseNumber()`, `validateSection()`
+  - Property test: round-trip zapisania i odczytania utworu z sekcjami
+  - Property test: eksport i import zachowuje sekcje
+  - Testy integracyjne: dodawanie, edycja, usuwanie sekcji
+  - _Feature: Song Sections_
 
 - [ ] 15. Implementacja timera i przewijania w prompterze
   - Utworzenie hooks/usePrompterTimer.ts (play, pause, reset, seek)
