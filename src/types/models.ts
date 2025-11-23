@@ -1,9 +1,18 @@
 // types/models.ts
 
+export type SectionType = 'verse' | 'chorus' | 'bridge' | 'intro' | 'outro' | 'instrumental' | 'custom';
+
+export interface SongSection {
+  type: SectionType;
+  label?: string;  // Optional custom label (e.g., "Verse 1", "Pre-Chorus")
+  number?: number; // Automatic numbering for verses
+}
+
 export interface LyricLine {
   id: string;
   text: string;
   timeSeconds: number;
+  section?: SongSection;  // Optional section marker
 }
 
 export interface Song {

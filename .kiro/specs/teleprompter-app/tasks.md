@@ -338,7 +338,12 @@
   - Dodanie wyszukiwania i sortowania list utworów
   - _Requirements: 4.1_
 
-- [ ] 14.1. Rozszerzenie modelu danych o sekcje utworów
+- [x] 14.1. Rozszerzenie modelu danych o sekcje utworów
+
+
+
+
+
   - Dodanie typu `SectionType` i interfejsu `SongSection` do `types/models.ts`
   - Dodanie opcjonalnego pola `section` do interfejsu `LyricLine`
   - Zapewnienie kompatybilności wstecznej z istniejącymi utworami
