@@ -15,8 +15,8 @@ describe('Property 3: Adding a line increases line count', () => {
         fc.record({
           id: fc.string({ minLength: 1 }),
           title: fc.string({ minLength: 1, maxLength: 100 }),
-          artist: fc.option(fc.string({ maxLength: 100 })),
-          durationSeconds: fc.option(fc.float({ min: 0, max: 3600 })),
+          artist: fc.option(fc.string({ maxLength: 100 }), { nil: undefined }),
+          durationSeconds: fc.option(fc.float({ min: 0, max: 3600 }), { nil: undefined }),
           lines: fc.array(
             fc.record({
               id: fc.string({ minLength: 1 }),
@@ -72,8 +72,8 @@ describe('Property 4: Deleting a line decreases line count', () => {
         fc.record({
           id: fc.string({ minLength: 1 }),
           title: fc.string({ minLength: 1, maxLength: 100 }),
-          artist: fc.option(fc.string({ maxLength: 100 })),
-          durationSeconds: fc.option(fc.float({ min: 0, max: 3600 })),
+          artist: fc.option(fc.string({ maxLength: 100 }), { nil: undefined }),
+          durationSeconds: fc.option(fc.float({ min: 0, max: 3600 }), { nil: undefined }),
           lines: fc.array(
             fc.record({
               id: fc.string({ minLength: 1 }),
@@ -134,8 +134,8 @@ describe('Property 5: Modifying metadata updates song', () => {
         fc.record({
           id: fc.string({ minLength: 1 }),
           title: fc.string({ minLength: 1, maxLength: 100 }),
-          artist: fc.option(fc.string({ maxLength: 100 })),
-          durationSeconds: fc.option(fc.float({ min: 0, max: 3600 })),
+          artist: fc.option(fc.string({ maxLength: 100 }), { nil: undefined }),
+          durationSeconds: fc.option(fc.float({ min: 0, max: 3600 }), { nil: undefined }),
           lines: fc.array(
             fc.record({
               id: fc.string({ minLength: 1 }),
