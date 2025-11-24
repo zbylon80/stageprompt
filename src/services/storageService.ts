@@ -299,9 +299,26 @@ class StorageServiceImpl implements StorageService {
         throw new Error('Dane importu są nieprawidłowe.');
       }
 
-      // Import songs
+      // Import songs with section sanitization
       for (const song of data.songs) {
-        await this.saveSong(song);
+        // Sanitize sections in lines - strip invalid sections but keep the line
+        const sanitizedSong = {
+          ...song,
+          lines: song.lines.map((line: any) => {
+            // If line has a section, validate it
+            if (line.section !== undefined && line.section !== null) {
+              const sectionErrors = this.validateSectionData(line.section);
+              if (sectionErrors.length > 0) {
+                // Invalid section - strip it but keep the line
+                console.warn(`Stripping invalid section from line ${line.id}:`, sectionErrors);
+                const { section, ...lineWithoutSection } = line;
+                return lineWithoutSection;
+              }
+            }
+            return line;
+          }),
+        };
+        await this.saveSong(sanitizedSong);
       }
 
       // Import setlists
@@ -315,6 +332,46 @@ class StorageServiceImpl implements StorageService {
       }
       throw new Error(ERROR_MESSAGES.importData);
     }
+  }
+
+  private validateSectionData(section: any): string[] {
+    const errors: string[] = [];
+
+    if (!section || typeof section !== 'object') {
+      errors.push('Section must be an object');
+      return errors;
+    }
+
+    // Type is required
+    if (!section.type || typeof section.type !== 'string') {
+      errors.push('Section type is required');
+      return errors;
+    }
+
+    const validTypes = ['verse', 'chorus', 'bridge', 'intro', 'outro', 'instrumental', 'custom'];
+    if (!validTypes.includes(section.type)) {
+      errors.push('Invalid section type');
+      return errors;
+    }
+
+    // Number is optional but must be valid if present
+    if (section.number !== undefined && section.number !== null) {
+      if (typeof section.number !== 'number' || section.number < 1 || !Number.isInteger(section.number)) {
+        errors.push('Invalid section number');
+      }
+    }
+
+    // Label is optional but must be valid if present
+    // Empty strings are invalid - they should be undefined/null instead
+    if (section.label !== undefined && section.label !== null) {
+      if (typeof section.label !== 'string') {
+        errors.push('Invalid section label');
+      } else if (section.label.trim() === '') {
+        errors.push('Invalid section label');
+      }
+    }
+
+    return errors;
   }
 
   // Utility

@@ -326,6 +326,271 @@ describe('StorageService Property Tests', () => {
   });
 
   /**
+   * Feature: Song Sections, Export/Import with Sections
+   * Tests round-trip of export/import with section data
+   */
+  describe('Export/Import with Sections', () => {
+    it('should preserve sections through export/import cycle', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(songGenerator, { minLength: 1, maxLength: 5 }).map(songs => {
+            return songs.map((song, index) => ({
+              ...song,
+              id: `song-${index}`,
+            }));
+          }),
+          fc.array(setlistGenerator, { minLength: 0, maxLength: 3 }).map(setlists => {
+            return setlists.map((setlist, index) => ({
+              ...setlist,
+              id: `setlist-${index}`,
+            }));
+          }),
+          async (songs: Song[], setlists: Setlist[]) => {
+            // Clear storage
+            storage.clear();
+            
+            // Save all songs and setlists
+            for (const song of songs) {
+              await storageService.saveSong(song);
+            }
+            for (const setlist of setlists) {
+              await storageService.saveSetlist(setlist);
+            }
+            
+            // Export data
+            const exportedJson = await storageService.exportData();
+            const exportedData = JSON.parse(exportedJson);
+            
+            // Verify sections are in the export
+            for (const song of songs) {
+              const exportedSong = exportedData.songs.find((s: Song) => s.id === song.id);
+              expect(exportedSong).toBeDefined();
+              
+              // Check each line's section
+              for (let i = 0; i < song.lines.length; i++) {
+                const originalLine = song.lines[i];
+                const exportedLine = exportedSong.lines[i];
+                
+                if (originalLine.section) {
+                  expect(exportedLine.section).toEqual(originalLine.section);
+                } else {
+                  // JSON serialization may convert undefined to null or preserve undefined
+                  // Both are acceptable for missing sections
+                  expect(exportedLine.section === undefined || exportedLine.section === null).toBe(true);
+                }
+              }
+            }
+            
+            // Clear storage and import
+            storage.clear();
+            await storageService.importData(exportedJson);
+            
+            // Load imported data
+            const importedSongs = await storageService.loadSongs();
+            const importedSetlists = await storageService.loadSetlists();
+            
+            // Verify songs with sections
+            expect(importedSongs).toHaveLength(songs.length);
+            for (const song of songs) {
+              const importedSong = importedSongs.find(s => s.id === song.id);
+              expect(importedSong).toBeDefined();
+              
+              // Basic song properties should match
+              expect(importedSong!.id).toEqual(song.id);
+              expect(importedSong!.title).toEqual(song.title);
+              expect(importedSong!.artist).toEqual(song.artist);
+              expect(importedSong!.durationSeconds).toEqual(song.durationSeconds);
+              expect(importedSong!.createdAt).toEqual(song.createdAt);
+              expect(importedSong!.updatedAt).toEqual(song.updatedAt);
+              expect(importedSong!.lines).toHaveLength(song.lines.length);
+              
+              // Check each line
+              for (let i = 0; i < song.lines.length; i++) {
+                const originalLine = song.lines[i];
+                const importedLine = importedSong!.lines[i];
+                
+                expect(importedLine.id).toEqual(originalLine.id);
+                expect(importedLine.text).toEqual(originalLine.text);
+                expect(importedLine.timeSeconds).toEqual(originalLine.timeSeconds);
+                
+                // Section handling: invalid sections (empty labels) are stripped during import
+                if (originalLine.section) {
+                  const hasEmptyLabel = originalLine.section.label !== undefined && 
+                                       originalLine.section.label !== null && 
+                                       typeof originalLine.section.label === 'string' && 
+                                       originalLine.section.label.trim() === '';
+                  
+                  if (hasEmptyLabel) {
+                    // Invalid section should be stripped
+                    expect(importedLine.section).toBeUndefined();
+                  } else {
+                    // Valid section should be preserved
+                    expect(importedLine.section).toEqual(originalLine.section);
+                  }
+                } else {
+                  // No section or null section
+                  expect(importedLine.section === undefined || importedLine.section === null).toBe(true);
+                }
+              }
+            }
+            
+            // Verify setlists
+            expect(importedSetlists).toHaveLength(setlists.length);
+            for (const setlist of setlists) {
+              const importedSetlist = importedSetlists.find(s => s.id === setlist.id);
+              expect(importedSetlist).toEqual(setlist);
+            }
+          }
+        ),
+        { numRuns: 100 }
+      );
+    });
+
+    it('should strip invalid sections during import without blocking', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          songGenerator,
+          async (song: Song) => {
+            // Clear storage
+            storage.clear();
+            
+            // Create export data with some invalid sections
+            const songWithInvalidSection = {
+              ...song,
+              lines: song.lines.map((line, index) => {
+                if (index === 0 && line.section) {
+                  // Make first section invalid
+                  return {
+                    ...line,
+                    section: {
+                      type: 'invalid-type', // Invalid type
+                      label: line.section.label,
+                      number: line.section.number,
+                    },
+                  };
+                }
+                return line;
+              }),
+            };
+            
+            const exportData = {
+              version: '1.0',
+              exportDate: Date.now(),
+              songs: [songWithInvalidSection],
+              setlists: [],
+            };
+            
+            // Suppress console warnings for this test
+            const originalConsoleWarn = console.warn;
+            console.warn = jest.fn();
+            
+            // Import should succeed despite invalid section
+            await storageService.importData(JSON.stringify(exportData));
+            
+            // Restore console.warn
+            console.warn = originalConsoleWarn;
+            
+            // Load the imported song
+            const importedSong = await storageService.loadSong(song.id);
+            expect(importedSong).toBeDefined();
+            
+            // First line should have section stripped
+            if (song.lines.length > 0 && song.lines[0].section) {
+              expect(importedSong!.lines[0].section).toBeUndefined();
+            }
+            
+            // Other lines should be preserved (but their sections may also be stripped if invalid)
+            for (let i = 1; i < song.lines.length; i++) {
+              const originalLine = song.lines[i];
+              const importedLine = importedSong!.lines[i];
+              
+              // Basic line properties should match
+              expect(importedLine.id).toEqual(originalLine.id);
+              expect(importedLine.text).toEqual(originalLine.text);
+              expect(importedLine.timeSeconds).toEqual(originalLine.timeSeconds);
+              
+              // Section may be stripped if it has invalid data (like empty label)
+              if (originalLine.section) {
+                const hasEmptyLabel = originalLine.section.label !== undefined && 
+                                     originalLine.section.label !== null && 
+                                     typeof originalLine.section.label === 'string' && 
+                                     originalLine.section.label.trim() === '';
+                
+                if (hasEmptyLabel) {
+                  // Invalid section (empty label) should be stripped
+                  expect(importedLine.section).toBeUndefined();
+                } else {
+                  // Valid section should be preserved
+                  expect(importedLine.section).toEqual(originalLine.section);
+                }
+              }
+            }
+          }
+        ),
+        { numRuns: 50 }
+      );
+    });
+
+    it('should handle songs without sections during export/import', async () => {
+      await fc.assert(
+        fc.asyncProperty(
+          fc.array(
+            fc.record({
+              id: fc.string({ minLength: 1 }),
+              title: fc.string({ minLength: 1, maxLength: 100 }),
+              artist: fc.option(fc.string({ maxLength: 100 })),
+              durationSeconds: fc.option(fc.float({ min: 0, max: 7200, noNaN: true })),
+              lines: fc.array(
+                fc.record({
+                  id: fc.string({ minLength: 1 }),
+                  text: fc.string(),
+                  timeSeconds: fc.float({ min: 0, max: 3600, noNaN: true }),
+                  // No section field
+                }),
+                { maxLength: 20 }
+              ),
+              createdAt: fc.integer({ min: 0 }),
+              updatedAt: fc.integer({ min: 0 }),
+            }),
+            { minLength: 1, maxLength: 3 }
+          ).map(songs => {
+            return songs.map((song, index) => ({
+              ...song,
+              id: `song-${index}`,
+            }));
+          }),
+          async (songs: Song[]) => {
+            // Clear storage
+            storage.clear();
+            
+            // Save songs
+            for (const song of songs) {
+              await storageService.saveSong(song);
+            }
+            
+            // Export
+            const exportedJson = await storageService.exportData();
+            
+            // Clear and import
+            storage.clear();
+            await storageService.importData(exportedJson);
+            
+            // Verify
+            const importedSongs = await storageService.loadSongs();
+            expect(importedSongs).toHaveLength(songs.length);
+            
+            for (const song of songs) {
+              const importedSong = importedSongs.find(s => s.id === song.id);
+              expect(importedSong).toEqual(song);
+            }
+          }
+        ),
+        { numRuns: 50 }
+      );
+    });
+  });
+
+  /**
    * Feature: StagePrompt, Property 25: Usunięcie usuwa dane ze storage
    * Validates: Requirements 10.5
    */

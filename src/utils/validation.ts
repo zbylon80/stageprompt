@@ -263,6 +263,48 @@ function isValidLyricLine(line: any): boolean {
     return false;
   }
 
+  // Validate section if present (optional field)
+  // If section data is invalid, we'll strip it during import rather than blocking
+  if (line.section !== undefined && line.section !== null) {
+    if (!isValidSection(line.section)) {
+      // Invalid section - will be stripped during import
+      // But don't fail the entire line validation
+      console.warn(`Invalid section data in line ${line.id}, will be stripped during import`);
+    }
+  }
+
+  return true;
+}
+
+function isValidSection(section: any): boolean {
+  if (!section || typeof section !== 'object') {
+    return false;
+  }
+
+  // Type is required
+  if (!section.type || typeof section.type !== 'string') {
+    return false;
+  }
+
+  const validTypes: SectionType[] = ['verse', 'chorus', 'bridge', 'intro', 'outro', 'instrumental', 'custom'];
+  if (!validTypes.includes(section.type)) {
+    return false;
+  }
+
+  // Number is optional but must be valid if present
+  if (section.number !== undefined && section.number !== null) {
+    if (typeof section.number !== 'number' || section.number < 1 || !Number.isInteger(section.number)) {
+      return false;
+    }
+  }
+
+  // Label is optional but must be valid if present
+  if (section.label !== undefined && section.label !== null) {
+    if (typeof section.label !== 'string' || section.label.trim() === '') {
+      return false;
+    }
+  }
+
   return true;
 }
 

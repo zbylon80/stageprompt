@@ -421,7 +421,11 @@
   - Stylowanie znaczników w prompterze (duża czcionka, wyraźne kolory)
   - _Feature: Song Sections_
 
-- [ ] 14.8. Eksport i import sekcji
+- [x] 14.8. Eksport i import sekcji
+
+
+
+
   - Upewnienie się że `exportImportService.ts` zachowuje sekcje
   - Walidacja sekcji podczas importu
   - Obsługa błędnych danych sekcji (ignorowanie, nie blokowanie importu)
