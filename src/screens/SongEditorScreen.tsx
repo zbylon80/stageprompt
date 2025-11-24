@@ -525,20 +525,20 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         </View>
         <ConfirmDialog
           visible={showDeleteDialog}
-          title="Usuń utwór"
-          message={`Czy na pewno chcesz usunąć "${song.title || 'ten utwór'}"?`}
-          confirmText="Usuń"
-          cancelText="Anuluj"
+          title="Delete Song"
+          message={`Are you sure you want to delete "${song.title || 'this song'}"?`}
+          confirmText="Delete"
+          cancelText="Cancel"
           onConfirm={handleConfirmDelete}
           onCancel={handleCancelDelete}
           destructive
         />
         <ConfirmDialog
           visible={showResetTimesDialog}
-          title="Resetuj czasy"
-          message="Czy na pewno chcesz zresetować wszystkie czasy? Będziesz mógł ustawić nowe kotwice i użyć interpolacji."
-          confirmText="Resetuj"
-          cancelText="Anuluj"
+          title="Reset Times"
+          message="Are you sure you want to reset all times? You will be able to set new anchors and use interpolation."
+          confirmText="Reset"
+          cancelText="Cancel"
           onConfirm={handleConfirmResetTimes}
           onCancel={handleCancelResetTimes}
           destructive
@@ -567,20 +567,20 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
       </KeyboardAvoidingView>
       <ConfirmDialog
         visible={showDeleteDialog}
-        title="Usuń utwór"
-        message={`Czy na pewno chcesz usunąć "${song.title || 'ten utwór'}"?`}
-        confirmText="Usuń"
-        cancelText="Anuluj"
+        title="Delete Song"
+        message={`Are you sure you want to delete "${song.title || 'this song'}"?`}
+        confirmText="Delete"
+        cancelText="Cancel"
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         destructive
       />
       <ConfirmDialog
         visible={showResetTimesDialog}
-        title="Resetuj czasy"
-        message="Czy na pewno chcesz zresetować wszystkie czasy? Będziesz mógł ustawić nowe kotwice i użyć interpolacji."
-        confirmText="Resetuj"
-        cancelText="Anuluj"
+        title="Reset Times"
+        message="Are you sure you want to reset all times? You will be able to set new anchors and use interpolation."
+        confirmText="Reset"
+        cancelText="Cancel"
         onConfirm={handleConfirmResetTimes}
         onCancel={handleCancelResetTimes}
         destructive

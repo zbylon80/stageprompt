@@ -230,10 +230,10 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
       </View>
       <ConfirmDialog
         visible={songToDelete !== null}
-        title="Usuń utwór"
-        message={`Czy na pewno chcesz usunąć "${songToDelete?.title || 'ten utwór'}"?`}
-        confirmText="Usuń"
-        cancelText="Anuluj"
+        title="Delete Song"
+        message={`Are you sure you want to delete "${songToDelete?.title || 'this song'}"?`}
+        confirmText="Delete"
+        cancelText="Cancel"
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         destructive

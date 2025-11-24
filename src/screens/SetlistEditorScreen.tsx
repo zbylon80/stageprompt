@@ -656,10 +656,10 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
       />
       <ConfirmDialog
         visible={showDeleteDialog}
-        title="Usuń setlistę"
-        message={`Czy na pewno chcesz usunąć "${name || 'tę setlistę'}"?`}
-        confirmText="Usuń"
-        cancelText="Anuluj"
+        title="Delete Setlist"
+        message={`Are you sure you want to delete "${name || 'this setlist'}"?`}
+        confirmText="Delete"
+        cancelText="Cancel"
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         destructive
