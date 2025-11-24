@@ -562,8 +562,13 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
   };
 
   // Render setlist content (left side)
+  // FIX: The left column needs proper scrolling on both web and native.
+  // On web, we use overflow: auto in CSS. On native (Android/iOS), we must wrap
+  // the entire content in a ScrollView because View doesn't scroll.
+  // The header stays sticky at the top, and the song list scrolls below it.
   const renderSetlistContent = () => (
     <View style={[styles.setlistContent, useSplitView && styles.setlistContentSplit]}>
+      {/* Sticky header - stays at top */}
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <TextInput
@@ -595,6 +600,7 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
         </View>
       </View>
 
+      {/* Scrollable content area */}
       {songIds.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No songs in this setlist</Text>
@@ -626,6 +632,7 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
           keyExtractor={(item: string) => item}
           onDragEnd={handleDragEnd}
           containerStyle={styles.listContainer}
+          scrollEnabled={true}
         />
       )}
     </View>
@@ -697,8 +704,11 @@ const styles = StyleSheet.create({
   },
   setlistContent: {
     flex: 1,
+    // FIX: SCROLL BLOCKER WAS HERE - overflow: 'auto' on parent container caused the
+    // ScrollView child to grow infinitely without scrolling. The parent must have
+    // overflow: 'hidden' so the child ScrollView with maxHeight can scroll properly.
     // @ts-ignore - web-only styles
-    overflow: 'auto',
+    overflow: 'hidden',
     // @ts-ignore - web-only styles
     display: 'flex',
     // @ts-ignore - web-only styles
@@ -708,7 +718,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 300,
     // @ts-ignore - web-only styles
-    overflow: 'auto',
+    overflow: 'hidden',
     // @ts-ignore - web-only styles
     display: 'flex',
     // @ts-ignore - web-only styles
@@ -879,10 +889,13 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     flex: 1,
-    // @ts-ignore - web-only styles
-    overflowY: 'auto',
-    // @ts-ignore - web-only styles
-    overflowX: 'hidden',
+    // FIX: On web, we need maxHeight to constrain the ScrollView so it can scroll.
+    // Without maxHeight, the ScrollView grows to fit all content and nothing scrolls.
+    // On native, FlatList/ScrollView handles scrolling automatically with flex: 1.
+    ...(Platform.OS === 'web' && {
+      maxHeight: 'calc(100vh - 150px)' as any,
+      overflow: 'auto' as any,
+    }),
   },
   songsPanelList: {
     flex: 1,
