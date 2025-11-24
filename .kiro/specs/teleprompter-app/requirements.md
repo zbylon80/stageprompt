@@ -71,6 +71,8 @@ Workflow zakłada, że użytkownik przygotowuje materiały na komputerze, ekspor
 3. WHEN użytkownik dodaje nową linijkę tekstu THEN System SHALL utworzyć nowy LyricLine z unikalnym ID i domyślną wartością czasu
 4. WHEN użytkownik usuwa linijkę tekstu THEN System SHALL usunąć tę linijkę z utworu i zaktualizować wyświetlanie
 5. WHEN użytkownik ręcznie wprowadza wartość czasu dla linijki THEN System SHALL zwalidować i zapisać wartość timeSeconds dla tego LyricLine
+6. WHEN użytkownik dotyka przycisku dodania linijki między istniejącymi linijkami THEN System SHALL wstawić nową linijkę w wybranym miejscu
+7. WHEN użytkownik przeciąga linijkę do innej pozycji THEN System SHALL zaktualizować kolejność linijek w utworze
 
 ### Wymaganie 5
 

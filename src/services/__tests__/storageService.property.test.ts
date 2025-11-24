@@ -15,10 +15,27 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Generators for property-based testing
+const sectionTypeGenerator = fc.constantFrom(
+  'verse' as const,
+  'chorus' as const,
+  'bridge' as const,
+  'intro' as const,
+  'outro' as const,
+  'instrumental' as const,
+  'custom' as const
+);
+
+const songSectionGenerator = fc.record({
+  type: sectionTypeGenerator,
+  label: fc.option(fc.string({ maxLength: 50 })),
+  number: fc.option(fc.integer({ min: 1, max: 20 })),
+});
+
 const lyricLineGenerator = fc.record({
   id: fc.string({ minLength: 1 }),
   text: fc.string(),
   timeSeconds: fc.float({ min: 0, max: 3600, noNaN: true }),
+  section: fc.option(songSectionGenerator),
 });
 
 const songGenerator = fc.record({

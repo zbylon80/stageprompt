@@ -15,6 +15,8 @@ interface LyricLineEditorProps {
   onUpdateSection: (id: string, section: SongSection | undefined) => void;
   onDelete: (id: string) => void;
   onSplitLines?: (id: string, lines: string[]) => void;
+  onLongPress?: () => void;
+  isActive?: boolean;
 }
 
 export interface LyricLineEditorRef {
@@ -31,6 +33,8 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
   onUpdateSection,
   onDelete,
   onSplitLines,
+  onLongPress,
+  isActive = false,
 }, ref) => {
   const [timeText, setTimeText] = React.useState(line.timeSeconds.toString());
   const [showSectionPicker, setShowSectionPicker] = React.useState(false);
@@ -95,9 +99,18 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
   };
 
   return (
-    <View ref={containerRef} style={styles.container}>
+    <TouchableOpacity
+      ref={containerRef}
+      style={[styles.container, isActive && styles.containerActive]}
+      onLongPress={onLongPress}
+      activeOpacity={1}
+      disabled={!onLongPress}
+    >
       <View style={styles.header}>
         <Text style={styles.lineNumber}>{index + 1}</Text>
+        {onLongPress && (
+          <Text style={styles.dragHandle}>☰</Text>
+        )}
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={() => onDelete(line.id)}
@@ -158,7 +171,7 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
         onRemove={handleSectionRemove}
         onCancel={() => setShowSectionPicker(false)}
       />
-    </View>
+    </TouchableOpacity>
   );
 });
 
@@ -172,6 +185,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 6,
   },
+  containerActive: {
+    backgroundColor: '#3a3a3a',
+    opacity: 0.9,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -182,6 +204,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#4a9eff',
+    flex: 1,
+  },
+  dragHandle: {
+    fontSize: 18,
+    color: '#888888',
+    marginRight: 12,
   },
   deleteButton: {
     width: 28,

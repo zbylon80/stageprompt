@@ -398,7 +398,12 @@
   - Obsługa usuwania sekcji
   - _Feature: Song Sections_
 
-- [ ] 14.6. Aktualizacja SongEditorScreen dla sekcji
+- [x] 14.6. Aktualizacja SongEditorScreen dla sekcji
+
+
+
+
+
   - Przekazywanie informacji o sekcjach do `LyricLineEditor`
   - Obsługa zapisywania sekcji wraz z utworem
   - Obliczanie `nextVerseNumber` dla nowych zwrotek

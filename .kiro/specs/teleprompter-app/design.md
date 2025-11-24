@@ -208,7 +208,15 @@ interface EditorState {
 
 **Komponenty:**
 - Header z polami tytuł/artysta
-- `FlatList` z `LyricLineEditor` (każda linijka ma pole do wprowadzenia czasu)
+- `DraggableFlatList` z `LyricLineEditor` (każda linijka ma pole do wprowadzenia czasu)
+- Przyciski "+ Insert Line" między linijkami do wstawiania nowych linijek
+- Drag handle (☰) w każdej linijce do zmiany kolejności przez long press
+
+**Funkcjonalności:**
+- **Dodawanie linijki na końcu**: Przycisk "+ Add Line" w nagłówku
+- **Wstawianie linijki w środku**: Przyciski "+ Insert Line" między każdą parą linijek
+- **Zmiana kolejności**: Long press na linijce aktywuje drag & drop
+- **Auto-save**: Automatyczne zapisywanie przy każdej zmianie
 
 #### 4. SetlistEditorScreen (z Panelem Utworów)
 
@@ -349,6 +357,61 @@ export function calculateScrollY(params: ScrollCalculationParams): number {
   return y - anchorY;
 }
 ```
+
+#### SongEditorScreen - Line Management
+
+**Funkcje zarządzania linijkami:**
+
+```typescript
+// Dodawanie linijki na końcu
+const addLine = () => {
+  const newLine: LyricLine = {
+    id: generateId(),
+    text: '',
+    timeSeconds: song.lines.length > 0 
+      ? song.lines[song.lines.length - 1].timeSeconds 
+      : 0,
+  };
+  setSong(prev => ({ ...prev, lines: [...prev.lines, newLine] }));
+};
+
+// Wstawianie linijki po określonym indeksie
+const insertLineAfter = (index: number) => {
+  const currentLine = song.lines[index];
+  const nextLine = song.lines[index + 1];
+  
+  // Oblicz czas dla nowej linijki (między obecną a następną)
+  const newTime = nextLine 
+    ? (currentLine.timeSeconds + nextLine.timeSeconds) / 2
+    : currentLine.timeSeconds + 1;
+  
+  const newLine: LyricLine = {
+    id: generateId(),
+    text: '',
+    timeSeconds: newTime,
+  };
+  
+  setSong(prev => ({
+    ...prev,
+    lines: [
+      ...prev.lines.slice(0, index + 1),
+      newLine,
+      ...prev.lines.slice(index + 1),
+    ],
+  }));
+};
+
+// Zmiana kolejności przez drag & drop
+const handleDragEnd = ({ data }: { data: LyricLine[] }) => {
+  setSong(prev => ({ ...prev, lines: data }));
+};
+```
+
+**Użycie DraggableFlatList:**
+- Biblioteka: `react-native-draggable-flatlist`
+- Long press na linijce aktywuje tryb przeciągania
+- Wizualny feedback (opacity, shadow) podczas przeciągania
+- Drag handle (☰) wskazuje możliwość przeciągania
 
 #### keyEventService.ts
 

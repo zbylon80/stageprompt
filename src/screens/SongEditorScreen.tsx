@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
+import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootStackParamList } from '../types/navigation';
 import { Song, LyricLine, SongSection } from '../types/models';
 import { LyricLineEditor, LyricLineEditorRef } from '../components/LyricLineEditor';
@@ -97,6 +99,33 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
     setSong((prev) => ({
       ...prev,
       lines: [...prev.lines, newLine],
+    }));
+    setIsDirty(true);
+  }, [song.lines]);
+
+  const insertLineAfter = useCallback((index: number) => {
+    const currentLine = song.lines[index];
+    const nextLine = song.lines[index + 1];
+    
+    // Calculate time for new line (between current and next, or after current)
+    const newTime = nextLine 
+      ? (currentLine.timeSeconds + nextLine.timeSeconds) / 2
+      : currentLine.timeSeconds + 1;
+    
+    const newLine: LyricLine = {
+      id: generateId(),
+      text: '',
+      timeSeconds: newTime,
+    };
+    
+    setLastAddedLineId(newLine.id);
+    setSong((prev) => ({
+      ...prev,
+      lines: [
+        ...prev.lines.slice(0, index + 1),
+        newLine,
+        ...prev.lines.slice(index + 1),
+      ],
     }));
     setIsDirty(true);
   }, [song.lines]);
@@ -191,6 +220,14 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
     });
     setIsDirty(true);
   };
+
+  const handleDragEnd = useCallback(({ data }: { data: LyricLine[] }) => {
+    setSong((prev) => ({
+      ...prev,
+      lines: data,
+    }));
+    setIsDirty(true);
+  }, []);
 
   const handleSave = async () => {
     const errors = validateSong(song);
@@ -297,31 +334,52 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         </View>
       </View>
 
-      {song.lines.map((line, index) => {
-        // Calculate next verse number for this line
-        const nextVerseNumber = getNextVerseNumber(song.lines);
-        
-        return (
-          <LyricLineEditor
-            key={line.id}
-            ref={(ref) => {
-              if (ref) {
-                lineRefs.current.set(line.id, ref);
-              } else {
-                lineRefs.current.delete(line.id);
-              }
-            }}
-            line={line}
-            index={index}
-            nextVerseNumber={nextVerseNumber}
-            onUpdateText={updateLineText}
-            onUpdateTime={updateLineTime}
-            onUpdateSection={updateLineSection}
-            onDelete={deleteLine}
-            onSplitLines={handleSplitLines}
-          />
-        );
-      })}
+      <GestureHandlerRootView style={styles.linesContainer}>
+        <DraggableFlatList
+          data={song.lines}
+          onDragEnd={handleDragEnd}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item: line, drag, isActive, getIndex }: RenderItemParams<LyricLine>) => {
+            const nextVerseNumber = getNextVerseNumber(song.lines);
+            const index = getIndex() ?? 0;
+            
+            return (
+              <ScaleDecorator>
+                <View>
+                  <LyricLineEditor
+                    ref={(ref) => {
+                      if (ref) {
+                        lineRefs.current.set(line.id, ref);
+                      } else {
+                        lineRefs.current.delete(line.id);
+                      }
+                    }}
+                    line={line}
+                    index={index}
+                    nextVerseNumber={nextVerseNumber}
+                    onUpdateText={updateLineText}
+                    onUpdateTime={updateLineTime}
+                    onUpdateSection={updateLineSection}
+                    onDelete={deleteLine}
+                    onSplitLines={handleSplitLines}
+                    onLongPress={drag}
+                    isActive={isActive}
+                  />
+                  
+                  {/* Insert button after each line */}
+                  <TouchableOpacity
+                    style={styles.insertButton}
+                    onPress={() => insertLineAfter(index)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.insertButtonText}>+ Insert Line</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScaleDecorator>
+            );
+          }}
+        />
+      </GestureHandlerRootView>
     </>
   );
 
@@ -470,5 +528,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#ffffff',
+  },
+  linesContainer: {
+    flex: 1,
+  },
+  insertButton: {
+    alignSelf: 'center',
+    backgroundColor: '#1a1a1a',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,
+    marginVertical: 4,
+    borderWidth: 1,
+    borderColor: '#3a3a3a',
+    borderStyle: 'dashed',
+  },
+  insertButtonText: {
+    fontSize: 12,
+    color: '#4a9eff',
+    fontWeight: '500',
   },
 });
