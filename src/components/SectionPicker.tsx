@@ -55,6 +55,12 @@ export function SectionPicker({
   const [customLabel, setCustomLabel] = useState<string>(
     currentSection?.type === 'custom' ? currentSection.label || '' : ''
   );
+  const [startTime, setStartTime] = useState<string>(
+    currentSection?.startTime !== undefined ? formatTime(currentSection.startTime) : ''
+  );
+  const [endTime, setEndTime] = useState<string>(
+    currentSection?.endTime !== undefined ? formatTime(currentSection.endTime) : ''
+  );
 
   const handleTypeSelect = (type: SectionType) => {
     setSelectedType(type);
@@ -67,6 +73,10 @@ export function SectionPicker({
   const handleConfirm = () => {
     let section: SongSection;
 
+    // Parse timing values
+    const parsedStartTime = parseTime(startTime);
+    const parsedEndTime = parseTime(endTime);
+
     if (selectedType === 'verse') {
       // Automatic numbering for verses
       const verseNumber = currentSection?.type === 'verse' && currentSection.number
@@ -76,6 +86,8 @@ export function SectionPicker({
         type: 'verse',
         number: verseNumber,
         label: `Verse ${verseNumber}`,
+        startTime: parsedStartTime,
+        endTime: parsedEndTime,
       };
     } else if (selectedType === 'custom') {
       // Custom label required
@@ -86,12 +98,16 @@ export function SectionPicker({
       section = {
         type: 'custom',
         label: customLabel.trim(),
+        startTime: parsedStartTime,
+        endTime: parsedEndTime,
       };
     } else {
       // Other types use default labels
       section = {
         type: selectedType,
         label: selectedType.charAt(0).toUpperCase() + selectedType.slice(1),
+        startTime: parsedStartTime,
+        endTime: parsedEndTime,
       };
     }
 
@@ -163,6 +179,42 @@ export function SectionPicker({
                 />
               </View>
             )}
+
+            {/* Timing inputs */}
+            <View style={styles.timingContainer}>
+              <Text style={styles.timingTitle}>Section Timing (Optional)</Text>
+              <Text style={styles.timingDescription}>
+                Set start and end times to auto-calculate line timings
+              </Text>
+              
+              <View style={styles.timingRow}>
+                <View style={styles.timingInputGroup}>
+                  <Text style={styles.timingLabel}>Start Time:</Text>
+                  <TextInput
+                    style={styles.timingInput}
+                    value={startTime}
+                    onChangeText={setStartTime}
+                    placeholder="MM:SS"
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    testID="start-time-input"
+                  />
+                </View>
+
+                <View style={styles.timingInputGroup}>
+                  <Text style={styles.timingLabel}>End Time:</Text>
+                  <TextInput
+                    style={styles.timingInput}
+                    value={endTime}
+                    onChangeText={setEndTime}
+                    placeholder="MM:SS"
+                    placeholderTextColor="#999"
+                    keyboardType="numeric"
+                    testID="end-time-input"
+                  />
+                </View>
+              </View>
+            </View>
           </ScrollView>
 
           <View style={styles.actions}>
@@ -332,4 +384,75 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  timingContainer: {
+    padding: 16,
+    backgroundColor: '#f9f9f9',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  timingTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  timingDescription: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 12,
+  },
+  timingRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  timingInputGroup: {
+    flex: 1,
+  },
+  timingLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 6,
+  },
+  timingInput: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#333',
+  },
 });
+
+/**
+ * Formats seconds to MM:SS format
+ */
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+/**
+ * Parses MM:SS format to seconds
+ * Returns undefined if input is empty or invalid
+ */
+function parseTime(timeStr: string): number | undefined {
+  if (!timeStr || !timeStr.trim()) {
+    return undefined;
+  }
+
+  const parts = timeStr.split(':');
+  if (parts.length !== 2) {
+    return undefined;
+  }
+
+  const mins = parseInt(parts[0], 10);
+  const secs = parseInt(parts[1], 10);
+
+  if (isNaN(mins) || isNaN(secs) || mins < 0 || secs < 0 || secs >= 60) {
+    return undefined;
+  }
+
+  return mins * 60 + secs;
+}

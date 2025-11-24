@@ -4,14 +4,16 @@ export type SectionType = 'verse' | 'chorus' | 'bridge' | 'intro' | 'outro' | 'i
 
 export interface SongSection {
   type: SectionType;
-  label?: string;  // Optional custom label (e.g., "Verse 1", "Pre-Chorus")
-  number?: number; // Automatic numbering for verses
+  label?: string;      // Optional custom label (e.g., "Verse 1", "Pre-Chorus")
+  number?: number;     // Automatic numbering for verses
+  startTime?: number;  // Start time of section in seconds (optional)
+  endTime?: number;    // End time of section in seconds (optional)
 }
 
 export interface LyricLine {
   id: string;
   text: string;
-  timeSeconds: number;
+  timeSeconds?: number;  // Optional - undefined means time not set yet
   section?: SongSection;  // Optional section marker
 }
 

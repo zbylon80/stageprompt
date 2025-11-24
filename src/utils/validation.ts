@@ -11,10 +11,16 @@ export function validateSong(song: Partial<Song>): string[] {
 
   if (song.lines) {
     song.lines.forEach((line, index) => {
-      if (line.timeSeconds < 0) {
+      // Only validate if time is set (not undefined)
+      if (line.timeSeconds !== undefined && line.timeSeconds < 0) {
         errors.push(`Line ${index + 1}: time cannot be negative`);
       }
-      if (index > 0 && line.timeSeconds < song.lines![index - 1].timeSeconds) {
+      // Check ordering only for lines that have times set
+      const prevLine = song.lines![index - 1];
+      if (index > 0 && 
+          line.timeSeconds !== undefined && 
+          prevLine?.timeSeconds !== undefined &&
+          line.timeSeconds < prevLine.timeSeconds) {
         errors.push(`Line ${index + 1}: time must be greater than previous line`);
       }
     });
@@ -301,6 +307,28 @@ function isValidSection(section: any): boolean {
   // Label is optional but must be valid if present
   if (section.label !== undefined && section.label !== null) {
     if (typeof section.label !== 'string' || section.label.trim() === '') {
+      return false;
+    }
+  }
+
+  // StartTime is optional but must be valid if present
+  if (section.startTime !== undefined && section.startTime !== null) {
+    if (typeof section.startTime !== 'number' || section.startTime < 0) {
+      return false;
+    }
+  }
+
+  // EndTime is optional but must be valid if present
+  if (section.endTime !== undefined && section.endTime !== null) {
+    if (typeof section.endTime !== 'number' || section.endTime < 0) {
+      return false;
+    }
+  }
+
+  // If both startTime and endTime are present, endTime must be >= startTime
+  if (section.startTime !== undefined && section.endTime !== undefined &&
+      section.startTime !== null && section.endTime !== null) {
+    if (section.endTime < section.startTime) {
       return false;
     }
   }

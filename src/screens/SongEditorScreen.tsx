@@ -24,6 +24,8 @@ import { useSongs } from '../hooks/useSongs';
 import { generateId } from '../utils/idGenerator';
 import { validateSong } from '../utils/validation';
 import { getNextVerseNumber } from '../utils/sectionLabels';
+import { calculateLineTimes } from '../utils/timingInterpolation';
+import { interpolateAnchorTimes, findAnchorPoints } from '../utils/anchorBasedTiming';
 
 type SongEditorScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SongEditor'>;
 type SongEditorScreenRouteProp = RouteProp<RootStackParamList, 'SongEditor'>;
@@ -51,6 +53,32 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   const [lastAddedLineId, setLastAddedLineId] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showResetTimesDialog, setShowResetTimesDialog] = useState(false);
+
+  // Auto-calculate line times based on section timing
+  useEffect(() => {
+    // Check if any section has timing information
+    const hasSectionTiming = song.lines.some(
+      line => line.section?.startTime !== undefined || line.section?.endTime !== undefined
+    );
+    
+    if (hasSectionTiming) {
+      const linesWithCalculatedTimes = calculateLineTimes(song.lines);
+      
+      // Only update if times actually changed to avoid infinite loop
+      const timesChanged = linesWithCalculatedTimes.some((line, index) => 
+        line.timeSeconds !== song.lines[index]?.timeSeconds
+      );
+      
+      if (timesChanged) {
+        setSong(prev => ({
+          ...prev,
+          lines: linesWithCalculatedTimes,
+        }));
+        setIsDirty(true);
+      }
+    }
+  }, [song.lines.map(l => `${l.id}-${l.section?.startTime}-${l.section?.endTime}`).join(',')]);
 
   // Auto-save with debounce
   useEffect(() => {
@@ -91,9 +119,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
     const newLine: LyricLine = {
       id: generateId(),
       text: '',
-      timeSeconds: song.lines.length > 0 
-        ? song.lines[song.lines.length - 1].timeSeconds 
-        : 0,
+      timeSeconds: undefined, // undefined means time not set yet
     };
     setLastAddedLineId(newLine.id);
     setSong((prev) => ({
@@ -104,18 +130,10 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   }, [song.lines]);
 
   const insertLineAfter = useCallback((index: number) => {
-    const currentLine = song.lines[index];
-    const nextLine = song.lines[index + 1];
-    
-    // Calculate time for new line (between current and next, or after current)
-    const newTime = nextLine 
-      ? (currentLine.timeSeconds + nextLine.timeSeconds) / 2
-      : currentLine.timeSeconds + 1;
-    
     const newLine: LyricLine = {
       id: generateId(),
       text: '',
-      timeSeconds: newTime,
+      timeSeconds: undefined, // undefined means time not set yet
     };
     
     setLastAddedLineId(newLine.id);
@@ -178,12 +196,48 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   };
 
   const updateLineSection = (id: string, section: SongSection | undefined) => {
-    setSong((prev) => ({
-      ...prev,
-      lines: prev.lines.map((line) =>
-        line.id === id ? { ...line, section } : line
-      ),
-    }));
+    setSong((prev) => {
+      const lineIndex = prev.lines.findIndex(line => line.id === id);
+      if (lineIndex === -1) return prev;
+      
+      const updatedLines = [...prev.lines];
+      const currentLine = updatedLines[lineIndex];
+      
+      // Update the current line with the new section
+      updatedLines[lineIndex] = { ...currentLine, section };
+      
+      // If section has timing info, propagate it to all lines in the same section
+      if (section && (section.startTime !== undefined || section.endTime !== undefined)) {
+        // Find all lines that belong to this section (same type, number, label)
+        for (let i = lineIndex; i < updatedLines.length; i++) {
+          const line = updatedLines[i];
+          
+          // Check if this line is part of the same section
+          if (line.section &&
+              line.section.type === section.type &&
+              line.section.number === section.number &&
+              line.section.label === section.label) {
+            // Update section timing for all lines in this section
+            updatedLines[i] = {
+              ...line,
+              section: {
+                ...line.section,
+                startTime: section.startTime,
+                endTime: section.endTime,
+              },
+            };
+          } else if (i > lineIndex) {
+            // Stop when we reach a different section
+            break;
+          }
+        }
+      }
+      
+      return {
+        ...prev,
+        lines: updatedLines,
+      };
+    });
     setIsDirty(true);
   };
 
@@ -200,11 +254,10 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
       const lineIndex = prev.lines.findIndex((line) => line.id === id);
       if (lineIndex === -1) return prev;
 
-      const currentLine = prev.lines[lineIndex];
       const newLines: LyricLine[] = lines.map((text, idx) => ({
         id: idx === 0 ? id : generateId(),
         text: text.trim(),
-        timeSeconds: currentLine.timeSeconds + idx,
+        timeSeconds: undefined, // undefined means time not set yet
       }));
 
       const updatedLines = [
@@ -230,22 +283,82 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   }, []);
 
   const handleSave = async () => {
+    console.log('=== SAVE CLICKED ===');
+    console.log('Song to save:', { title: song.title, lineCount: song.lines.length });
+    console.log('Lines:', song.lines.map((l, i) => ({ index: i, time: l.timeSeconds })));
+    
     const errors = validateSong(song);
+    console.log('Validation errors:', errors);
+    
     if (errors.length > 0) {
       Alert.alert('Validation Error', errors.join('\n'));
       return;
     }
 
     try {
+      console.log('Calling saveSong...');
       await saveSong({
         ...song,
         updatedAt: Date.now(),
       });
+      console.log('Save successful!');
       setIsDirty(false);
       navigation.goBack();
     } catch (error) {
+      console.error('Save error:', error);
       Alert.alert('Error', 'Failed to save song');
     }
+  };
+
+  const handleInterpolateTimes = () => {
+    console.log('=== INTERPOLATE CLICKED ===');
+    console.log('Current lines:', song.lines.map((l, i) => ({ index: i, id: l.id, time: l.timeSeconds })));
+    
+    // Find anchor points (lines with explicitly set times)
+    const anchors = findAnchorPoints(song.lines);
+    console.log('Found anchors:', anchors);
+    
+    if (anchors.length < 2) {
+      console.log('Not enough anchors, showing alert');
+      Alert.alert(
+        'Need Anchor Points',
+        'Set times for at least 2 lines to interpolate between them.'
+      );
+      return;
+    }
+    
+    // Interpolate times between anchors
+    const interpolatedLines = interpolateAnchorTimes(song.lines, anchors);
+    console.log('Interpolated lines:', interpolatedLines.map((l, i) => ({ index: i, id: l.id, time: l.timeSeconds })));
+    
+    setSong(prev => ({
+      ...prev,
+      lines: interpolatedLines,
+    }));
+    setIsDirty(true);
+    console.log('State updated');
+  };
+
+  const handleResetTimes = () => {
+    setShowResetTimesDialog(true);
+  };
+
+  const handleConfirmResetTimes = () => {
+    setShowResetTimesDialog(false);
+    console.log('Resetting all times to undefined');
+    setSong(prev => ({
+      ...prev,
+      lines: prev.lines.map(line => ({
+        ...line,
+        timeSeconds: undefined,
+      })),
+    }));
+    setIsDirty(true);
+    console.log('Times reset complete');
+  };
+
+  const handleCancelResetTimes = () => {
+    setShowResetTimesDialog(false);
   };
 
   const handleDelete = () => {
@@ -281,6 +394,26 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         >
           <Text style={styles.topButtonText}>Save</Text>
         </TouchableOpacity>
+        
+        {song.lines.length > 0 && (
+          <TouchableOpacity
+            style={[styles.topButton, styles.resetButton]}
+            onPress={handleResetTimes}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.topButtonText}>🔄 Reset Times</Text>
+          </TouchableOpacity>
+        )}
+        
+        {song.lines.length >= 2 && (
+          <TouchableOpacity
+            style={[styles.topButton, styles.interpolateButton]}
+            onPress={handleInterpolateTimes}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.topButtonText}>⚡ Interpolate</Text>
+          </TouchableOpacity>
+        )}
         
         {song.title && song.lines.length > 0 && (
           <TouchableOpacity
@@ -400,6 +533,16 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
           onCancel={handleCancelDelete}
           destructive
         />
+        <ConfirmDialog
+          visible={showResetTimesDialog}
+          title="Resetuj czasy"
+          message="Czy na pewno chcesz zresetować wszystkie czasy? Będziesz mógł ustawić nowe kotwice i użyć interpolacji."
+          confirmText="Resetuj"
+          cancelText="Anuluj"
+          onConfirm={handleConfirmResetTimes}
+          onCancel={handleCancelResetTimes}
+          destructive
+        />
       </>
     );
   }
@@ -432,6 +575,16 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         onCancel={handleCancelDelete}
         destructive
       />
+      <ConfirmDialog
+        visible={showResetTimesDialog}
+        title="Resetuj czasy"
+        message="Czy na pewno chcesz zresetować wszystkie czasy? Będziesz mógł ustawić nowe kotwice i użyć interpolacji."
+        confirmText="Resetuj"
+        cancelText="Anuluj"
+        onConfirm={handleConfirmResetTimes}
+        onCancel={handleCancelResetTimes}
+        destructive
+      />
     </>
   );
 }
@@ -441,7 +594,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     overflow: 'auto' as any,
     height: '100vh' as any,
-    paddingVertical: 16,
     paddingBottom: 50,
   },
   keyboardAvoidingView: {
@@ -465,6 +617,10 @@ const styles = StyleSheet.create({
     gap: 8,
     borderBottomWidth: 1,
     borderBottomColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
+    position: 'sticky' as any,
+    top: 0,
+    zIndex: 100,
   },
   topButton: {
     backgroundColor: '#2a3a2a',
@@ -473,6 +629,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     borderWidth: 1,
     borderColor: '#3a4a3a',
+  },
+  resetButton: {
+    backgroundColor: '#3a3a2a',
+    borderColor: '#4a4a3a',
+  },
+  interpolateButton: {
+    backgroundColor: '#4a3a2a',
+    borderColor: '#5a4a3a',
   },
   previewButton: {
     backgroundColor: '#2a2a3a',

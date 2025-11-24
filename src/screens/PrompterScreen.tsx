@@ -1,6 +1,6 @@
 // screens/PrompterScreen.tsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import Animated, { useAnimatedScrollHandler, useSharedValue, useAnimatedRef, scrollTo } from 'react-native-reanimated';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../types/navigation';
@@ -18,6 +19,8 @@ import { Song, LyricLine } from '../types/models';
 import { storageService } from '../services/storageService';
 import { useSettings } from '../hooks/useSettings';
 import { SectionMarker } from '../components/SectionMarker';
+import { usePrompterTimer } from '../hooks/usePrompterTimer';
+import { calculateScrollY } from '../services/scrollAlgorithm';
 
 type PrompterScreenRouteProp = RouteProp<RootStackParamList, 'Prompter'>;
 type PrompterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Prompter'>;
@@ -27,6 +30,9 @@ interface PrompterScreenProps {
   navigation: PrompterScreenNavigationProp;
 }
 
+// Create Animated FlatList component
+const AnimatedFlatList = Animated.createAnimatedComponent(FlatList<LyricLine>);
+
 export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
   const { songId, setlistId } = route.params;
   const [song, setSong] = useState<Song | null>(null);
@@ -35,6 +41,13 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
   const [setlistSongIds, setSetlistSongIds] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const { settings } = useSettings();
+  
+  // Timer hook for controlling playback
+  const { currentTime, isPlaying, play, pause, reset } = usePrompterTimer();
+  
+  // Reanimated refs and values
+  const scrollViewRef = useAnimatedRef<FlatList<LyricLine>>();
+  const scrollY = useSharedValue(0);
 
   // Load song data and setlist
   useEffect(() => {
@@ -79,7 +92,32 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
   const backgroundColor = settings?.backgroundColor ?? '#000000';
   const marginHorizontal = settings?.marginHorizontal ?? 40;
   const lineHeight = settings?.lineHeight ?? 60;
+  const anchorYPercent = settings?.anchorYPercent ?? 0.4;
+  
+  // Calculate anchorY in pixels (based on screen height)
+  const [screenHeight, setScreenHeight] = useState(0);
+  const anchorY = screenHeight * anchorYPercent;
 
+  // Effect to calculate and animate scroll position based on timer
+  useEffect(() => {
+    if (!song || !song.lines.length || screenHeight === 0) return;
+    
+    const targetScrollY = calculateScrollY({
+      currentTime,
+      lines: song.lines,
+      lineHeight,
+      anchorY,
+    });
+    
+    // Animate scroll to target position
+    scrollTo(scrollViewRef, 0, targetScrollY, true);
+  }, [currentTime, song, lineHeight, anchorY, screenHeight]);
+  
+  // Reset timer when song changes
+  useEffect(() => {
+    reset();
+  }, [songId, reset]);
+  
   // Navigation handlers
   const handlePreviousSong = () => {
     if (currentIndex > 0 && setlistSongIds.length > 0) {
@@ -92,6 +130,15 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
     if (currentIndex < setlistSongIds.length - 1 && setlistSongIds.length > 0) {
       const nextSongId = setlistSongIds[currentIndex + 1];
       navigation.replace('Prompter', { songId: nextSongId, setlistId });
+    }
+  };
+  
+  // Play/Pause toggle handler
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      pause();
+    } else {
+      play();
     }
   };
 
@@ -184,7 +231,13 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor }]}>
+    <View 
+      style={[styles.container, { backgroundColor }]}
+      onLayout={(event) => {
+        const { height } = event.nativeEvent.layout;
+        setScreenHeight(height);
+      }}
+    >
       {/* Hide status bar for fullscreen mode */}
       <StatusBar hidden />
       
@@ -208,9 +261,10 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
           </Text>
         )}
         
-        {/* Navigation controls (only show if in setlist) */}
-        {setlistId && (
-          <View style={styles.controls}>
+        {/* Playback controls */}
+        <View style={styles.controls}>
+          {/* Previous song button (only show if in setlist) */}
+          {setlistId && (
             <TouchableOpacity
               style={[styles.controlButton, !hasPrevious && styles.controlButtonDisabled]}
               onPress={handlePreviousSong}
@@ -219,13 +273,30 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
             >
               <Text style={[styles.controlButtonText, { color: textColor }]}>◀</Text>
             </TouchableOpacity>
-            
+          )}
+          
+          {/* Play/Pause button */}
+          <TouchableOpacity
+            style={styles.controlButton}
+            onPress={handlePlayPause}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.controlButtonText, { color: textColor }]}>
+              {isPlaying ? '⏸' : '▶'}
+            </Text>
+          </TouchableOpacity>
+          
+          {/* Song position info (only show if in setlist) */}
+          {setlistId && (
             <View style={styles.controlInfo}>
               <Text style={[styles.controlInfoText, { color: textColor }]}>
                 {currentIndex + 1} / {setlistSongIds.length}
               </Text>
             </View>
+          )}
 
+          {/* Next song button (only show if in setlist) */}
+          {setlistId && (
             <TouchableOpacity
               style={[styles.controlButton, !hasNext && styles.controlButtonDisabled]}
               onPress={handleNextSong}
@@ -234,17 +305,26 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
             >
               <Text style={[styles.controlButtonText, { color: textColor }]}>▶</Text>
             </TouchableOpacity>
-          </View>
-        )}
+          )}
+        </View>
+        
+        {/* Timer display */}
+        <View style={styles.timerContainer}>
+          <Text style={[styles.timerText, { color: textColor }]}>
+            {formatTime(currentTime)}
+          </Text>
+        </View>
       </View>
 
-      {/* Lyrics display */}
-      <FlatList
+      {/* Lyrics display with animated scrolling */}
+      <AnimatedFlatList
+        ref={scrollViewRef}
         data={song.lines}
         renderItem={renderLine}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        scrollEnabled={false} // Disable manual scrolling during auto-scroll
         // Performance optimizations
         removeClippedSubviews={Platform.OS !== 'web'}
         maxToRenderPerBatch={10}
@@ -253,6 +333,13 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
       />
     </View>
   );
+}
+
+// Helper function to format time as MM:SS
+function formatTime(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 const styles = StyleSheet.create({
@@ -346,5 +433,17 @@ const styles = StyleSheet.create({
   controlInfoText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  timerContainer: {
+    marginTop: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 12,
+  },
+  timerText: {
+    fontSize: 16,
+    fontWeight: '600',
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
 });

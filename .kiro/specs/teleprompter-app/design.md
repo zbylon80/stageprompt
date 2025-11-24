@@ -106,10 +106,21 @@ graph TD
 ```typescript
 // types/models.ts
 
+export type SectionType = 'verse' | 'chorus' | 'bridge' | 'intro' | 'outro' | 'instrumental' | 'custom';
+
+export interface SongSection {
+  type: SectionType;
+  label?: string;      // Custom label for 'custom' type
+  number?: number;     // Verse number (e.g., 1, 2, 3)
+  startTime?: number;  // Start time of section in seconds (optional)
+  endTime?: number;    // End time of section in seconds (optional)
+}
+
 export interface LyricLine {
   id: string;
   text: string;
-  timeSeconds: number;
+  timeSeconds: number;  // Can be auto-calculated from section timing
+  section?: SongSection; // Optional section marker
 }
 
 export interface Song {
@@ -357,6 +368,126 @@ export function calculateScrollY(params: ScrollCalculationParams): number {
   return y - anchorY;
 }
 ```
+
+#### Section-Based Timing (Uproszczone Wprowadzanie Czasów)
+
+**Koncepcja:**
+
+Zamiast wymagać czasu dla każdej linijki, użytkownik określa tylko:
+1. **Czas rozpoczęcia sekcji** (startTime) - dla pierwszej linijki sekcji
+2. **Czas zakończenia sekcji** (endTime) - dla ostatniej linijki sekcji
+
+Linijki pośrednie są automatycznie interpolowane równomiernie w czasie trwania sekcji.
+
+**Przykład:**
+
+```
+[Verse 1] Start: 0:10, End: 0:30
+  - "First line"      → auto: 10.0s
+  - "Second line"     → auto: 16.67s
+  - "Third line"      → auto: 23.33s
+  - "Fourth line"     → auto: 30.0s
+
+[Chorus] Start: 0:35, End: 0:50
+  - "Chorus line 1"   → auto: 35.0s
+  - "Chorus line 2"   → auto: 42.5s
+  - "Chorus line 3"   → auto: 50.0s
+```
+
+**Algorytm Interpolacji Czasów:**
+
+```typescript
+// utils/timingInterpolation.ts
+
+/**
+ * Calculates interpolated times for lines within a section.
+ * If a line has explicit timeSeconds, it's used. Otherwise, it's interpolated
+ * based on section startTime and endTime.
+ */
+export function calculateLineTimes(lines: LyricLine[]): LyricLine[] {
+  const result: LyricLine[] = [];
+  let currentSectionLines: LyricLine[] = [];
+  let currentSection: SongSection | undefined;
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Check if this is the start of a new section
+    const isNewSection = line.section && (
+      !currentSection ||
+      line.section.type !== currentSection.type ||
+      line.section.number !== currentSection.number ||
+      line.section.label !== currentSection.label
+    );
+    
+    // Process previous section if we're starting a new one
+    if (isNewSection && currentSectionLines.length > 0) {
+      result.push(...interpolateSectionTimes(currentSectionLines, currentSection));
+      currentSectionLines = [];
+    }
+    
+    // Update current section
+    if (line.section) {
+      currentSection = line.section;
+    }
+    
+    currentSectionLines.push(line);
+  }
+  
+  // Process last section
+  if (currentSectionLines.length > 0) {
+    result.push(...interpolateSectionTimes(currentSectionLines, currentSection));
+  }
+  
+  return result;
+}
+
+function interpolateSectionTimes(
+  lines: LyricLine[],
+  section: SongSection | undefined
+): LyricLine[] {
+  // If no section or no timing info, return as-is
+  if (!section || section.startTime === undefined || section.endTime === undefined) {
+    return lines;
+  }
+  
+  const { startTime, endTime } = section;
+  const count = lines.length;
+  
+  if (count === 0) return lines;
+  if (count === 1) {
+    return [{
+      ...lines[0],
+      timeSeconds: startTime,
+    }];
+  }
+  
+  // Interpolate times evenly across the section
+  return lines.map((line, index) => {
+    const fraction = index / (count - 1);
+    const interpolatedTime = startTime + (endTime - startTime) * fraction;
+    
+    return {
+      ...line,
+      timeSeconds: interpolatedTime,
+    };
+  });
+}
+```
+
+**Integracja z UI:**
+
+W `SongEditorScreen`, przy pierwszej linijce sekcji pokazują się dwa pola:
+- **Start sekcji**: Input dla `section.startTime`
+- **Koniec sekcji**: Input dla `section.endTime`
+
+Czasy są automatycznie przeliczane przy każdej zmianie i wyświetlane jako podpowiedź przy każdej linijce.
+
+**Kompatybilność Wsteczna:**
+
+- Linijki bez sekcji używają `timeSeconds` bezpośrednio (stary sposób)
+- Linijki z sekcją ale bez `startTime`/`endTime` również używają `timeSeconds`
+- System obsługuje mieszane podejście (niektóre sekcje z timing, inne bez)
 
 #### SongEditorScreen - Line Management
 

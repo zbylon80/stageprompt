@@ -7,8 +7,14 @@ Aplikacja teleprompter na tablet z Androidem, zbudowana w React Native + TypeScr
 ### Zarządzanie Piosenkami
 - ✅ Tworzenie i edycja piosenek z metadanymi (tytuł, artysta)
 - ✅ Edytor tekstów z obsługą linii i timingów
+- ✅ **Interpolacja czasów** - inteligentne ustawianie timingów
+  - Ustawianie kotwic (anchor points) dla kluczowych linii
+  - Automatyczna interpolacja czasów między kotwicami
+  - Przycisk "Reset Times" do resetowania wszystkich czasów
+  - Możliwość zapisywania wersji roboczych (bez pełnych timingów)
 - ✅ Lista wszystkich piosenek z możliwością przeglądania
 - ✅ Automatyczne zapisywanie zmian
+- ✅ Sticky toolbar - przyciski zawsze widoczne podczas scrollowania
 
 ### Zarządzanie Setlistami
 - ✅ Tworzenie i edycja setlist
@@ -104,6 +110,11 @@ Aplikacja wykorzystuje:
 - **Service Layer** - Logika biznesowa (storageService, scrollAlgorithm)
 - **Type Safety** - Pełne typowanie TypeScript
 - **Property-Based Testing** - Testowanie właściwości uniwersalnych
+
+## Dokumentacja
+
+- [Interpolacja Czasów](./TIMING-INTERPOLATION.md) - Szczegółowy opis systemu interpolacji timingów
+- [Sekcje Piosenek](./SECTION-TIMING-FEATURE.md) - Funkcjonalność sekcji i timingów
 
 ## Roadmap
 

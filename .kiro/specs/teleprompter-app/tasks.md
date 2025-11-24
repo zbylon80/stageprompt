@@ -439,14 +439,21 @@
   - Testy integracyjne: dodawanie, edycja, usuwanie sekcji
   - _Feature: Song Sections_
 
-- [ ] 15. Implementacja timera i przewijania w prompterze
+- [x] 15. Implementacja timera i przewijania w prompterze
+
+
+
+
+
   - Utworzenie hooks/usePrompterTimer.ts (play, pause, reset, seek)
   - Implementacja timer loop (setInterval 50-100ms)
   - Integracja calculateScrollY z timerem
   - Implementacja animowanego przewijania z Reanimated 2
   - _Requirements: 4.2, 4.3_
 
-- [ ] 15.1 Napisanie testów unit dla timera
+- [x] 15.1 Napisanie testów unit dla timera
+
+
   - Test play/pause/reset funkcjonalności
   - _Requirements: 5.1, 5.2_
 

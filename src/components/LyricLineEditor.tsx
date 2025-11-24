@@ -36,14 +36,14 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
   onLongPress,
   isActive = false,
 }, ref) => {
-  const [timeText, setTimeText] = React.useState(line.timeSeconds.toString());
+  const [timeText, setTimeText] = React.useState(line.timeSeconds?.toString() || '');
   const [showSectionPicker, setShowSectionPicker] = React.useState(false);
   const textInputRef = React.useRef<TextInput>(null);
   const containerRef = React.useRef<View>(null);
 
   // Keep local text input in sync when parent updates timeSeconds
   useEffect(() => {
-    const nextText = line.timeSeconds.toString();
+    const nextText = line.timeSeconds?.toString() || '';
     if (timeText !== nextText) {
       setTimeText(nextText);
     }
