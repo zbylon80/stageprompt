@@ -410,7 +410,11 @@
   - Aktualizacja `storageService.ts` do obsługi opcjonalnego pola `section`
   - _Feature: Song Sections_
 
-- [ ] 14.7. Integracja sekcji z PrompterScreen
+- [x] 14.7. Integracja sekcji z PrompterScreen
+
+
+
+
   - Modyfikacja `renderLine` do wyświetlania znaczników sekcji
   - Wyświetlanie `SectionMarker` tylko przy pierwszej linijce sekcji
   - Zastosowanie ustawień wyglądu do znaczników

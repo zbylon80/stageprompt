@@ -17,6 +17,7 @@ import { RootStackParamList } from '../types/navigation';
 import { Song, LyricLine } from '../types/models';
 import { storageService } from '../services/storageService';
 import { useSettings } from '../hooks/useSettings';
+import { SectionMarker } from '../components/SectionMarker';
 
 type PrompterScreenRouteProp = RouteProp<RootStackParamList, 'Prompter'>;
 type PrompterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Prompter'>;
@@ -119,32 +120,68 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
     );
   }
 
+  // Helper function to check if this is the first line of a section
+  const isFirstLineOfSection = (line: LyricLine, index: number): boolean => {
+    if (!line.section) return false;
+    if (index === 0) return true;
+    
+    const previousLine = song?.lines[index - 1];
+    if (!previousLine || !previousLine.section) return true;
+    
+    // Check if section changed
+    return (
+      previousLine.section.type !== line.section.type ||
+      previousLine.section.label !== line.section.label ||
+      previousLine.section.number !== line.section.number
+    );
+  };
+
   // Render lyric line
-  const renderLine = ({ item }: { item: LyricLine }) => (
-    <View
-      style={[
-        styles.lineContainer,
-        {
-          height: lineHeight,
-          paddingHorizontal: marginHorizontal,
-        },
-      ]}
-    >
-      <Text
+  const renderLine = ({ item, index }: { item: LyricLine; index: number }) => {
+    const showSectionMarker = isFirstLineOfSection(item, index);
+    
+    return (
+      <View
         style={[
-          styles.lineText,
+          styles.lineContainer,
           {
-            fontSize,
-            color: textColor,
-            lineHeight,
+            paddingHorizontal: marginHorizontal,
           },
         ]}
-        numberOfLines={1}
       >
-        {item.text}
-      </Text>
-    </View>
-  );
+        {/* Section marker - only show on first line of section */}
+        {showSectionMarker && item.section && (
+          <View style={styles.sectionMarkerContainer}>
+            <SectionMarker section={item.section} size="large" />
+          </View>
+        )}
+        
+        {/* Lyric text */}
+        <View
+          style={[
+            styles.lineTextContainer,
+            {
+              height: lineHeight,
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.lineText,
+              {
+                fontSize,
+                color: textColor,
+                lineHeight,
+              },
+            ]}
+            numberOfLines={1}
+          >
+            {item.text}
+          </Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={[styles.container, { backgroundColor }]}>
@@ -259,8 +296,16 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   lineContainer: {
+    alignItems: 'center',
+  },
+  sectionMarkerContainer: {
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  lineTextContainer: {
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
   },
   lineText: {
     fontWeight: '500',
