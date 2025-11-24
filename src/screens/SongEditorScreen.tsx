@@ -15,12 +15,13 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '../types/navigation';
-import { Song, LyricLine } from '../types/models';
+import { Song, LyricLine, SongSection } from '../types/models';
 import { LyricLineEditor, LyricLineEditorRef } from '../components/LyricLineEditor';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useSongs } from '../hooks/useSongs';
 import { generateId } from '../utils/idGenerator';
 import { validateSong } from '../utils/validation';
+import { getNextVerseNumber } from '../utils/sectionLabels';
 
 type SongEditorScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SongEditor'>;
 type SongEditorScreenRouteProp = RouteProp<RootStackParamList, 'SongEditor'>;
@@ -142,6 +143,16 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
       ...prev,
       lines: prev.lines.map((line) =>
         line.id === id ? { ...line, timeSeconds } : line
+      ),
+    }));
+    setIsDirty(true);
+  };
+
+  const updateLineSection = (id: string, section: SongSection | undefined) => {
+    setSong((prev) => ({
+      ...prev,
+      lines: prev.lines.map((line) =>
+        line.id === id ? { ...line, section } : line
       ),
     }));
     setIsDirty(true);
@@ -286,24 +297,31 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         </View>
       </View>
 
-      {song.lines.map((line, index) => (
-        <LyricLineEditor
-          key={line.id}
-          ref={(ref) => {
-            if (ref) {
-              lineRefs.current.set(line.id, ref);
-            } else {
-              lineRefs.current.delete(line.id);
-            }
-          }}
-          line={line}
-          index={index}
-          onUpdateText={updateLineText}
-          onUpdateTime={updateLineTime}
-          onDelete={deleteLine}
-          onSplitLines={handleSplitLines}
-        />
-      ))}
+      {song.lines.map((line, index) => {
+        // Calculate next verse number for this line
+        const nextVerseNumber = getNextVerseNumber(song.lines);
+        
+        return (
+          <LyricLineEditor
+            key={line.id}
+            ref={(ref) => {
+              if (ref) {
+                lineRefs.current.set(line.id, ref);
+              } else {
+                lineRefs.current.delete(line.id);
+              }
+            }}
+            line={line}
+            index={index}
+            nextVerseNumber={nextVerseNumber}
+            onUpdateText={updateLineText}
+            onUpdateTime={updateLineTime}
+            onUpdateSection={updateLineSection}
+            onDelete={deleteLine}
+            onSplitLines={handleSplitLines}
+          />
+        );
+      })}
     </>
   );
 

@@ -386,7 +386,12 @@
   - Opcja usunięcia sekcji
   - _Feature: Song Sections_
 
-- [ ] 14.5. Integracja sekcji z LyricLineEditor
+- [x] 14.5. Integracja sekcji z LyricLineEditor
+
+
+
+
+
   - Dodanie przycisku "+ Section" lub ikony 🏷️ do `components/LyricLineEditor.tsx`
   - Wyświetlanie `SectionMarker` gdy linijka ma sekcję
   - Integracja z `SectionPicker` do dodawania/edycji sekcji

@@ -2,13 +2,17 @@
 
 import React, { forwardRef, useEffect, useImperativeHandle } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { LyricLine } from '../types/models';
+import { LyricLine, SongSection } from '../types/models';
+import { SectionMarker } from './SectionMarker';
+import { SectionPicker } from './SectionPicker';
 
 interface LyricLineEditorProps {
   line: LyricLine;
   index: number;
+  nextVerseNumber: number;
   onUpdateText: (id: string, text: string) => void;
   onUpdateTime: (id: string, timeSeconds: number) => void;
+  onUpdateSection: (id: string, section: SongSection | undefined) => void;
   onDelete: (id: string) => void;
   onSplitLines?: (id: string, lines: string[]) => void;
 }
@@ -21,12 +25,15 @@ export interface LyricLineEditorRef {
 export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorProps>(({
   line,
   index,
+  nextVerseNumber,
   onUpdateText,
   onUpdateTime,
+  onUpdateSection,
   onDelete,
   onSplitLines,
 }, ref) => {
   const [timeText, setTimeText] = React.useState(line.timeSeconds.toString());
+  const [showSectionPicker, setShowSectionPicker] = React.useState(false);
   const textInputRef = React.useRef<TextInput>(null);
   const containerRef = React.useRef<View>(null);
 
@@ -73,6 +80,20 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
     onUpdateText(line.id, text);
   };
 
+  const handleSectionSelect = (section: SongSection) => {
+    onUpdateSection(line.id, section);
+    setShowSectionPicker(false);
+  };
+
+  const handleSectionRemove = () => {
+    onUpdateSection(line.id, undefined);
+    setShowSectionPicker(false);
+  };
+
+  const handleSectionEdit = () => {
+    setShowSectionPicker(true);
+  };
+
   return (
     <View ref={containerRef} style={styles.container}>
       <View style={styles.header}>
@@ -84,6 +105,26 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
         >
           <Text style={styles.deleteText}>×</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Section marker or add section button */}
+      <View style={styles.sectionContainer}>
+        {line.section ? (
+          <SectionMarker
+            section={line.section}
+            size="small"
+            onEdit={handleSectionEdit}
+          />
+        ) : (
+          <TouchableOpacity
+            style={styles.addSectionButton}
+            onPress={() => setShowSectionPicker(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.addSectionIcon}>🏷️</Text>
+            <Text style={styles.addSectionText}>Add Section</Text>
+          </TouchableOpacity>
+        )}
       </View>
       
       <TextInput
@@ -107,6 +148,16 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
           placeholderTextColor="#666666"
         />
       </View>
+
+      {/* Section picker modal */}
+      <SectionPicker
+        visible={showSectionPicker}
+        currentSection={line.section}
+        nextVerseNumber={nextVerseNumber}
+        onSelect={handleSectionSelect}
+        onRemove={handleSectionRemove}
+        onCancel={() => setShowSectionPicker(false)}
+      />
     </View>
   );
 });
@@ -145,6 +196,27 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '300',
     lineHeight: 20,
+  },
+  sectionContainer: {
+    marginBottom: 8,
+  },
+  addSectionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
+    borderRadius: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    alignSelf: 'flex-start',
+  },
+  addSectionIcon: {
+    fontSize: 14,
+    marginRight: 6,
+  },
+  addSectionText: {
+    fontSize: 12,
+    color: '#4a9eff',
+    fontWeight: '500',
   },
   textInput: {
     backgroundColor: '#1a1a1a',
