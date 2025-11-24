@@ -111,6 +111,91 @@ Aplikacja wykorzystuje:
 - **Type Safety** - Pełne typowanie TypeScript
 - **Property-Based Testing** - Testowanie właściwości uniwersalnych
 
+### Android SafeAreaView Pattern
+
+Wszystkie ekrany używają `SafeAreaView` z `react-native-safe-area-context` aby zapobiec kolizjom z systemowym paskiem nawigacji Androida:
+
+**FAB Buttons (Floating Action Buttons):**
+```typescript
+// Kontener z flexDirection: 'column' zamiast position: absolute dla każdego przycisku
+<SafeAreaView edges={['bottom']} style={styles.fabContainer}>
+  <TouchableOpacity style={styles.fab}>...</TouchableOpacity>
+  <TouchableOpacity style={styles.fabSecondary}>...</TouchableOpacity>
+</SafeAreaView>
+
+// Style
+fabContainer: {
+  position: 'absolute',
+  right: 20,
+  bottom: 0,
+  flexDirection: 'column',
+  alignItems: 'flex-end',
+  gap: 10,
+  paddingBottom: 10,
+  pointerEvents: 'box-none', // Pozwala klikać przez kontener
+}
+```
+
+**Bottom Action Bars:**
+```typescript
+// Sticky bottom bar z przyciskami akcji
+<SafeAreaView edges={['bottom']} style={styles.bottomActions}>
+  <View style={styles.bottomActionsContent}>
+    {/* Przyciski */}
+  </View>
+</SafeAreaView>
+
+// Style
+bottomActions: {
+  position: 'absolute',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  backgroundColor: '#1a1a1a',
+  borderTopWidth: 1,
+  borderTopColor: '#2a2a2a',
+}
+```
+
+**Fullscreen Screens (Prompter):**
+```typescript
+// Cały ekran w SafeAreaView
+<SafeAreaView edges={['top', 'bottom']} style={styles.container}>
+  {/* Zawartość */}
+</SafeAreaView>
+```
+
+**Kluczowe zasady:**
+- Używaj `edges={['bottom']}` dla elementów na dole ekranu
+- Używaj `edges={['top', 'bottom']}` dla ekranów pełnoekranowych
+- Dla FAB buttons: użyj `flexDirection: 'column'` zamiast `position: absolute` dla każdego przycisku
+- SafeAreaView automatycznie doda odpowiedni padding (20-30px na Androidzie)
+
+### Keyboard Handling
+
+Wszystkie ekrany z polami tekstowymi używają `KeyboardAvoidingView` aby zapobiec zasłanianiu inputów przez klawiaturę:
+
+```typescript
+<KeyboardAvoidingView
+  style={{ flex: 1 }}
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+>
+  {/* Zawartość ekranu */}
+</KeyboardAvoidingView>
+```
+
+**Konfiguracja w app.json:**
+```json
+"android": {
+  "softwareKeyboardLayoutMode": "resize"
+}
+```
+
+- `behavior="padding"` na iOS - dodaje padding na dole
+- `behavior="height"` na Android - zmniejsza wysokość kontenera
+- `softwareKeyboardLayoutMode="resize"` - zmienia rozmiar ekranu i automatycznie focusuje na aktywnym polu tekstowym
+
 ## Dokumentacja
 
 - [Interpolacja Czasów](./TIMING-INTERPOLATION.md) - Szczegółowy opis systemu interpolacji timingów

@@ -11,6 +11,7 @@ import {
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { useAnimatedScrollHandler, useSharedValue, useAnimatedRef, scrollTo } from 'react-native-reanimated';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -231,7 +232,8 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
   };
 
   return (
-    <View 
+    <SafeAreaView 
+      edges={['top', 'bottom']}
       style={[styles.container, { backgroundColor }]}
       onLayout={(event) => {
         const { height } = event.nativeEvent.layout;
@@ -241,7 +243,7 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
       {/* Hide status bar for fullscreen mode */}
       <StatusBar hidden />
       
-      {/* Exit button */}
+      {/* Exit button - SafeAreaView ensures it's not hidden by notch/camera */}
       <TouchableOpacity
         style={styles.exitButton}
         onPress={() => navigation.goBack()}
@@ -331,7 +333,7 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
         windowSize={5}
         initialNumToRender={10}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

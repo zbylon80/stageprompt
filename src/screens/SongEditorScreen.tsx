@@ -8,10 +8,10 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import DraggableFlatList, { RenderItemParams, ScaleDecorator } from 'react-native-draggable-flatlist';
@@ -20,6 +20,7 @@ import { RootStackParamList } from '../types/navigation';
 import { Song, LyricLine, SongSection } from '../types/models';
 import { LyricLineEditor, LyricLineEditorRef } from '../components/LyricLineEditor';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Toast } from '../components/Toast';
 import { useSongs } from '../hooks/useSongs';
 import { generateId } from '../utils/idGenerator';
 import { validateSong } from '../utils/validation';
@@ -54,6 +55,15 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   const [isDirty, setIsDirty] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showResetTimesDialog, setShowResetTimesDialog] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   // Auto-calculate line times based on section timing
   useEffect(() => {
@@ -291,7 +301,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
     console.log('Validation errors:', errors);
     
     if (errors.length > 0) {
-      Alert.alert('Validation Error', errors.join('\n'));
+      showToast(errors.join(', '), 'error');
       return;
     }
 
@@ -306,7 +316,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
       navigation.goBack();
     } catch (error) {
       console.error('Save error:', error);
-      Alert.alert('Error', 'Failed to save song');
+      showToast('Failed to save song', 'error');
     }
   };
 
@@ -319,11 +329,8 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
     console.log('Found anchors:', anchors);
     
     if (anchors.length < 2) {
-      console.log('Not enough anchors, showing alert');
-      Alert.alert(
-        'Need Anchor Points',
-        'Set times for at least 2 lines to interpolate between them.'
-      );
+      console.log('Not enough anchors, showing toast');
+      showToast('Set times for at least 2 lines to interpolate between them', 'info');
       return;
     }
     
@@ -371,11 +378,8 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
       await deleteSong(song.id);
       navigation.goBack();
     } catch (error) {
-      if (Platform.OS === 'web') {
-        Alert.alert('Error', 'Failed to delete song');
-      } else {
-        Alert.alert('Error', 'Failed to delete song');
-      }
+      console.error('Delete error:', error);
+      showToast('Failed to delete song', 'error');
     }
   };
 
@@ -386,55 +390,58 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   // Render content based on platform
   const renderContent = () => (
     <>
-      <View style={styles.topActions}>
-        <TouchableOpacity
-          style={styles.topButton}
-          onPress={handleSave}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.topButtonText}>Save</Text>
-        </TouchableOpacity>
-        
-        {song.lines.length > 0 && (
+      {/* Top action bar - only on web (sticky top) */}
+      {Platform.OS === 'web' && (
+        <View style={styles.topActions}>
           <TouchableOpacity
-            style={[styles.topButton, styles.resetButton]}
-            onPress={handleResetTimes}
+            style={styles.topButton}
+            onPress={handleSave}
             activeOpacity={0.7}
           >
-            <Text style={styles.topButtonText}>🔄 Reset Times</Text>
+            <Text style={styles.topButtonText}>Save</Text>
           </TouchableOpacity>
-        )}
-        
-        {song.lines.length >= 2 && (
-          <TouchableOpacity
-            style={[styles.topButton, styles.interpolateButton]}
-            onPress={handleInterpolateTimes}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.topButtonText}>⚡ Interpolate</Text>
-          </TouchableOpacity>
-        )}
-        
-        {song.title && song.lines.length > 0 && (
-          <TouchableOpacity
-            style={[styles.topButton, styles.previewButton]}
-            onPress={() => navigation.navigate('Prompter', { songId: song.id })}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.topButtonText}>▶ Preview</Text>
-          </TouchableOpacity>
-        )}
-        
-        {song.title && (
-          <TouchableOpacity
-            style={[styles.topButton, styles.deleteTopButton]}
-            onPress={handleDelete}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.topButtonText}>Delete</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+          
+          {song.lines.length > 0 && (
+            <TouchableOpacity
+              style={[styles.topButton, styles.resetButton]}
+              onPress={handleResetTimes}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.topButtonText}>🔄 Reset Times</Text>
+            </TouchableOpacity>
+          )}
+          
+          {song.lines.length >= 2 && (
+            <TouchableOpacity
+              style={[styles.topButton, styles.interpolateButton]}
+              onPress={handleInterpolateTimes}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.topButtonText}>⚡ Interpolate</Text>
+            </TouchableOpacity>
+          )}
+          
+          {song.title && song.lines.length > 0 && (
+            <TouchableOpacity
+              style={[styles.topButton, styles.previewButton]}
+              onPress={() => navigation.navigate('Prompter', { songId: song.id })}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.topButtonText}>▶ Preview</Text>
+            </TouchableOpacity>
+          )}
+          
+          {song.title && (
+            <TouchableOpacity
+              style={[styles.topButton, styles.deleteTopButton]}
+              onPress={handleDelete}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.topButtonText}>Delete</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
 
       <View style={styles.headerContainer}>
         <Text style={styles.label}>Title</Text>
@@ -523,6 +530,12 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         <View style={styles.container}>
           {renderContent()}
         </View>
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          visible={toastVisible}
+          onHide={() => setToastVisible(false)}
+        />
         <ConfirmDialog
           visible={showDeleteDialog}
           title="Delete Song"
@@ -547,7 +560,9 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
     );
   }
 
-  // Mobile version - with KeyboardAvoidingView
+  // Mobile version - with KeyboardAvoidingView and sticky bottom buttons
+  // FIX: Don't nest DraggableFlatList inside ScrollView
+  // FIX: Keep TextInputs outside FlatList to prevent focus loss on state change
   return (
     <>
       <KeyboardAvoidingView
@@ -555,16 +570,154 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <ScrollView
-          ref={scrollViewRef}
-          style={styles.scrollContainer}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={true}
-          keyboardShouldPersistTaps="handled"
-        >
-          {renderContent()}
-        </ScrollView>
+        {/* Header with Title/Artist inputs - outside FlatList to maintain focus */}
+        <View style={styles.headerContainer}>
+          <Text style={styles.label}>Title</Text>
+          <TextInput
+            style={styles.input}
+            value={song.title}
+            onChangeText={updateTitle}
+            placeholder="Song title..."
+            placeholderTextColor="#666666"
+          />
+
+          <Text style={styles.label}>Artist</Text>
+          <TextInput
+            style={styles.input}
+            value={song.artist}
+            onChangeText={updateArtist}
+            placeholder="Artist name..."
+            placeholderTextColor="#666666"
+          />
+
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Lyrics</Text>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={addLine}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.addButtonText}>+ Add Line</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <GestureHandlerRootView style={styles.linesContainer}>
+          <DraggableFlatList
+            data={song.lines}
+            onDragEnd={handleDragEnd}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No lyrics yet</Text>
+                <Text style={styles.emptySubtext}>Tap "+ Add Line" to start</Text>
+              </View>
+            }
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={true}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item: line, drag, isActive, getIndex }: RenderItemParams<LyricLine>) => {
+              const nextVerseNumber = getNextVerseNumber(song.lines);
+              const index = getIndex() ?? 0;
+              
+              return (
+                <ScaleDecorator>
+                  <View>
+                    <LyricLineEditor
+                      ref={(ref) => {
+                        if (ref) {
+                          lineRefs.current.set(line.id, ref);
+                        } else {
+                          lineRefs.current.delete(line.id);
+                        }
+                      }}
+                      line={line}
+                      index={index}
+                      nextVerseNumber={nextVerseNumber}
+                      onUpdateText={updateLineText}
+                      onUpdateTime={updateLineTime}
+                      onUpdateSection={updateLineSection}
+                      onDelete={deleteLine}
+                      onSplitLines={handleSplitLines}
+                      onLongPress={drag}
+                      isActive={isActive}
+                    />
+                    
+                    {/* Insert button after each line */}
+                    <TouchableOpacity
+                      style={styles.insertButton}
+                      onPress={() => insertLineAfter(index)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.insertButtonText}>+ Insert Line</Text>
+                    </TouchableOpacity>
+                  </View>
+                </ScaleDecorator>
+              );
+            }}
+          />
+        </GestureHandlerRootView>
+        
+        {/* Sticky bottom action bar for mobile - always visible */}
+        {/* FIX: SafeAreaView prevents collision with Android navigation bar */}
+        <SafeAreaView edges={['bottom']} style={styles.bottomActions}>
+          <View style={styles.bottomActionsContent}>
+            <TouchableOpacity
+              style={styles.bottomButton}
+              onPress={handleSave}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.bottomButtonText}>Save</Text>
+            </TouchableOpacity>
+            
+            {song.lines.length > 0 && (
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.resetButton]}
+                onPress={handleResetTimes}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.bottomButtonText}>🔄</Text>
+              </TouchableOpacity>
+            )}
+            
+            {song.lines.length >= 2 && (
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.interpolateButton]}
+                onPress={handleInterpolateTimes}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.bottomButtonText}>⚡</Text>
+              </TouchableOpacity>
+            )}
+            
+            {song.title && song.lines.length > 0 && (
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.previewButton]}
+                onPress={() => navigation.navigate('Prompter', { songId: song.id })}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.bottomButtonText}>▶</Text>
+              </TouchableOpacity>
+            )}
+            
+            {song.title && (
+              <TouchableOpacity
+                style={[styles.bottomButton, styles.deleteTopButton]}
+                onPress={handleDelete}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.bottomButtonText}>Delete</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
+      <Toast
+        message={toastMessage}
+        type={toastType}
+        visible={toastVisible}
+        onHide={() => setToastVisible(false)}
+      />
       <ConfirmDialog
         visible={showDeleteDialog}
         title="Delete Song"
@@ -606,7 +759,9 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingVertical: 16,
-    paddingBottom: 50,
+    // FIX: Extra padding at bottom to prevent content from being hidden
+    // behind the sticky bottom action bar (mobile only)
+    paddingBottom: 100,
   },
   topActions: {
     flexDirection: 'row',
@@ -618,9 +773,45 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#2a2a2a',
     backgroundColor: '#1a1a1a',
+    // FIX: position: sticky only works on web, not on Android
     position: 'sticky' as any,
     top: 0,
     zIndex: 100,
+  },
+  bottomActions: {
+    borderTopWidth: 1,
+    borderTopColor: '#2a2a2a',
+    backgroundColor: '#1a1a1a',
+    // FIX: On mobile, buttons are pinned to bottom instead of top
+    // SafeAreaView with edges={['bottom']} prevents collision with Android nav bar
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+  },
+  bottomActionsContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+  },
+  bottomButton: {
+    backgroundColor: '#2a3a2a',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#3a4a3a',
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  bottomButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#aaaaaa',
   },
   topButton: {
     backgroundColor: '#2a3a2a',
@@ -711,5 +902,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#4a9eff',
     fontWeight: '500',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    minHeight: 200,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: '#666',
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#555',
   },
 });

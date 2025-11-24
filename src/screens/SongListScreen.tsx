@@ -12,6 +12,7 @@ import {
   ScrollView,
   TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSongs } from '../hooks/useSongs';
@@ -213,20 +214,23 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
           )}
         </View>
         {renderList()}
-        <TouchableOpacity
-          style={styles.fabSetlists}
-          onPress={handleSetlistsPress}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.fabSetlistsText}>♫</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={handleNewSong}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.fabText}>+</Text>
-        </TouchableOpacity>
+        {/* FIX: SafeAreaView prevents FAB buttons from colliding with Android navigation bar */}
+        <SafeAreaView edges={['bottom']} style={styles.fabContainer}>
+          <TouchableOpacity
+            style={styles.fab}
+            onPress={handleNewSong}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.fabText}>+</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.fabSetlists}
+            onPress={handleSetlistsPress}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.fabSetlistsText}>♫</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
       </View>
       <ConfirmDialog
         visible={songToDelete !== null}
@@ -331,10 +335,17 @@ const styles = StyleSheet.create({
     color: '#ff6b6b',
     textAlign: 'center',
   },
-  fab: {
+  fabContainer: {
     position: 'absolute',
     right: 20,
-    bottom: 80,
+    bottom: 0,
+    pointerEvents: 'box-none',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 10,
+    paddingBottom: 10,
+  },
+  fab: {
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -354,9 +365,6 @@ const styles = StyleSheet.create({
     lineHeight: 32,
   },
   fabSetlists: {
-    position: 'absolute',
-    right: 20,
-    bottom: 150,
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -368,6 +376,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4.65,
+    marginBottom: 10,
   },
   fabSetlistsText: {
     fontSize: 28,

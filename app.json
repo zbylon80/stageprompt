@@ -27,7 +27,8 @@
       "permissions": [
         "BLUETOOTH",
         "BLUETOOTH_ADMIN"
-      ]
+      ],
+      "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
       "favicon": "./assets/favicon.png"

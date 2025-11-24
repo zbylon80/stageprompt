@@ -12,6 +12,7 @@ import {
   FlatList,
   ScrollView,
   useWindowDimensions,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { StackScreenProps } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
@@ -639,39 +640,45 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
   );
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      {useSplitView ? (
-        // Split view for wider screens (desktop/tablet landscape)
-        <View style={styles.splitViewContainer}>
-          {renderSetlistContent()}
-          <View style={styles.divider} />
-          {renderSongsPanel()}
-        </View>
-      ) : (
-        // Stacked view for narrow screens (mobile)
-        <View style={styles.stackedContainer}>
-          {renderSetlistContent()}
-          <View style={styles.divider} />
-          {renderSongsPanel()}
-        </View>
-      )}
-      <Toast
-        message={toastMessage}
-        type={toastType}
-        visible={toastVisible}
-        onHide={() => setToastVisible(false)}
-      />
-      <ConfirmDialog
-        visible={showDeleteDialog}
-        title="Delete Setlist"
-        message={`Are you sure you want to delete "${name || 'this setlist'}"?`}
-        confirmText="Delete"
-        cancelText="Cancel"
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-        destructive
-      />
-    </GestureHandlerRootView>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
+      <GestureHandlerRootView style={styles.container}>
+        {useSplitView ? (
+          // Split view for wider screens (desktop/tablet landscape)
+          <View style={styles.splitViewContainer}>
+            {renderSetlistContent()}
+            <View style={styles.divider} />
+            {renderSongsPanel()}
+          </View>
+        ) : (
+          // Stacked view for narrow screens (mobile)
+          <View style={styles.stackedContainer}>
+            {renderSetlistContent()}
+            <View style={styles.divider} />
+            {renderSongsPanel()}
+          </View>
+        )}
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          visible={toastVisible}
+          onHide={() => setToastVisible(false)}
+        />
+        <ConfirmDialog
+          visible={showDeleteDialog}
+          title="Delete Setlist"
+          message={`Are you sure you want to delete "${name || 'this setlist'}"?`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+          destructive
+        />
+      </GestureHandlerRootView>
+    </KeyboardAvoidingView>
   );
 }
 
