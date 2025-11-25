@@ -27,6 +27,7 @@ import { validateSong } from '../utils/validation';
 import { getNextVerseNumber } from '../utils/sectionLabels';
 import { calculateLineTimes } from '../utils/timingInterpolation';
 import { interpolateAnchorTimes, findAnchorPoints } from '../utils/anchorBasedTiming';
+import { parseTimeInput, formatTimeForEdit } from '../utils/timeFormat';
 
 type SongEditorScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SongEditor'>;
 type SongEditorScreenRouteProp = RouteProp<RootStackParamList, 'SongEditor'>;
@@ -58,6 +59,14 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+  const [durationText, setDurationText] = useState<string>(
+    formatTimeForEdit(song.durationSeconds)
+  );
+
+  // Update durationText when song.durationSeconds changes (e.g., when loading a different song)
+  useEffect(() => {
+    setDurationText(formatTimeForEdit(song.durationSeconds));
+  }, [song.id]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToastMessage(message);
@@ -123,6 +132,33 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
   const updateArtist = (artist: string) => {
     setSong((prev) => ({ ...prev, artist }));
     setIsDirty(true);
+  };
+
+  const handleDurationChange = (text: string) => {
+    setDurationText(text);
+  };
+
+  const handleDurationBlur = () => {
+    if (!durationText.trim()) {
+      // Empty duration is valid (undefined)
+      setSong((prev) => ({ ...prev, durationSeconds: undefined }));
+      setDurationText('');
+      setIsDirty(true);
+      return;
+    }
+
+    const result = parseTimeInput(durationText);
+    if (result.success && result.seconds !== undefined) {
+      setSong((prev) => ({ ...prev, durationSeconds: result.seconds }));
+      setDurationText(formatTimeForEdit(result.seconds));
+      setIsDirty(true);
+    } else {
+      // Restore previous valid value on error
+      setDurationText(formatTimeForEdit(song.durationSeconds));
+      if (result.error) {
+        showToast(result.error, 'error');
+      }
+    }
   };
 
   const addLine = useCallback(() => {
@@ -462,6 +498,35 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
           placeholderTextColor="#666666"
         />
 
+        <Text style={styles.label}>Duration (optional)</Text>
+        <TextInput
+          style={styles.input}
+          value={durationText}
+          onChangeText={handleDurationChange}
+          onBlur={handleDurationBlur}
+          placeholder="e.g., 3:45 or 225"
+          placeholderTextColor="#666666"
+          keyboardType="numeric"
+        />
+        
+        {song.durationSeconds !== undefined && song.lines.length > 0 && (() => {
+          const lastLineTime = song.lines
+            .map(line => line.timeSeconds)
+            .filter((time): time is number => time !== undefined)
+            .reduce((max, time) => Math.max(max, time), 0);
+          
+          if (lastLineTime > song.durationSeconds) {
+            return (
+              <View style={styles.warningContainer}>
+                <Text style={styles.warningText}>
+                  ⚠️ Duration ({formatTimeForEdit(song.durationSeconds)}) is shorter than the last line ({formatTimeForEdit(lastLineTime)})
+                </Text>
+              </View>
+            );
+          }
+          return null;
+        })()}
+
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Lyrics</Text>
           <TouchableOpacity
@@ -590,6 +655,35 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
             placeholder="Artist name..."
             placeholderTextColor="#666666"
           />
+
+          <Text style={styles.label}>Duration (optional)</Text>
+          <TextInput
+            style={styles.input}
+            value={durationText}
+            onChangeText={handleDurationChange}
+            onBlur={handleDurationBlur}
+            placeholder="e.g., 3:45 or 225"
+            placeholderTextColor="#666666"
+            keyboardType="numeric"
+          />
+          
+          {song.durationSeconds !== undefined && song.lines.length > 0 && (() => {
+            const lastLineTime = song.lines
+              .map(line => line.timeSeconds)
+              .filter((time): time is number => time !== undefined)
+              .reduce((max, time) => Math.max(max, time), 0);
+            
+            if (lastLineTime > song.durationSeconds) {
+              return (
+                <View style={styles.warningContainer}>
+                  <Text style={styles.warningText}>
+                    ⚠️ Duration ({formatTimeForEdit(song.durationSeconds)}) is shorter than the last line ({formatTimeForEdit(lastLineTime)})
+                  </Text>
+                </View>
+              );
+            }
+            return null;
+          })()}
 
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Lyrics</Text>
@@ -915,5 +1009,16 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     color: '#555',
+  },
+  warningContainer: {
+    backgroundColor: '#ff9800',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+  },
+  warningText: {
+    fontSize: 14,
+    color: '#1a1a1a',
+    fontWeight: '600',
   },
 });
