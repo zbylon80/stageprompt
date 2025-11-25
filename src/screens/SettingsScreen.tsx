@@ -11,15 +11,21 @@ import {
 } from 'react-native';
 import { useSettings } from '../hooks/useSettings';
 import { useKeyMapping } from '../hooks/useKeyMapping';
+import { useSongs } from '../hooks/useSongs';
+import { useSetlists } from '../hooks/useSetlists';
 import { AppSettings } from '../types/models';
 import Slider from '@react-native-community/slider';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Toast } from '../components/Toast';
 import { KeyMappingDialog } from '../components/KeyMappingDialog';
+import { exportImportService } from '../services/exportImportService';
+import { storageService } from '../services/storageService';
 
 export function SettingsScreen() {
   const { settings, loading, error, saveSettings } = useSettings();
   const { keyMapping, loading: keyMappingLoading, saveKeyMapping } = useKeyMapping();
+  const { songs, reload: reloadSongs } = useSongs();
+  const { setlists, reload: reloadSetlists } = useSetlists();
   
   // Local state for live editing
   const [localSettings, setLocalSettings] = useState<AppSettings | null>(null);
@@ -27,6 +33,10 @@ export function SettingsScreen() {
   const isResettingRef = React.useRef(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showKeyMappingDialog, setShowKeyMappingDialog] = useState(false);
+  const [showImportModeDialog, setShowImportModeDialog] = useState(false);
+  const [pendingImportData, setPendingImportData] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
@@ -88,6 +98,90 @@ export function SettingsScreen() {
       return cleaned;
     }
     return localSettings?.textColor || '#ffffff';
+  };
+
+  const handleExport = async () => {
+    try {
+      setIsExporting(true);
+      const jsonData = await exportImportService.exportAllData(songs, setlists);
+      const filename = `stageprompt-backup-${new Date().toISOString().split('T')[0]}.json`;
+      
+      await exportImportService.downloadExport(jsonData, filename);
+      showToast('Data exported successfully', 'success');
+    } catch (err) {
+      console.error('Export error:', err);
+      showToast('Failed to export data', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportPick = async () => {
+    try {
+      setIsImporting(true);
+      const fileContent = await exportImportService.pickImportFile();
+      
+      if (!fileContent) {
+        setIsImporting(false);
+        return; // User cancelled
+      }
+
+      // Validate the data
+      if (!exportImportService.validateImportData(fileContent)) {
+        showToast('Invalid import file format', 'error');
+        setIsImporting(false);
+        return;
+      }
+
+      // Store the data and show mode selection dialog
+      setPendingImportData(fileContent);
+      setShowImportModeDialog(true);
+      setIsImporting(false);
+    } catch (err) {
+      console.error('Import pick error:', err);
+      showToast('Failed to read import file', 'error');
+      setIsImporting(false);
+    }
+  };
+
+  const handleImportConfirm = async (mode: 'merge' | 'replace') => {
+    if (!pendingImportData) return;
+
+    try {
+      setIsImporting(true);
+      setShowImportModeDialog(false);
+
+      const { songs: importedSongs, setlists: importedSetlists } = 
+        await exportImportService.importData(pendingImportData, mode);
+
+      if (mode === 'replace') {
+        // Clear existing data first
+        await storageService.clearAll();
+      }
+
+      // Save imported data
+      for (const song of importedSongs) {
+        await storageService.saveSong(song);
+      }
+      for (const setlist of importedSetlists) {
+        await storageService.saveSetlist(setlist);
+      }
+
+      // Reload data
+      await reloadSongs();
+      await reloadSetlists();
+
+      showToast(
+        `Data imported successfully (${importedSongs.length} songs, ${importedSetlists.length} setlists)`,
+        'success'
+      );
+      setPendingImportData(null);
+    } catch (err) {
+      console.error('Import error:', err);
+      showToast('Failed to import data', 'error');
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   if (loading || keyMappingLoading || !localSettings) {
@@ -353,6 +447,42 @@ export function SettingsScreen() {
         )}
       </View>
 
+      {/* Data Management Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Data Management</Text>
+        <Text style={styles.description}>
+          Export your songs and setlists to backup or transfer to another device
+        </Text>
+        
+        <TouchableOpacity
+          style={[styles.exportButton, isExporting && styles.buttonDisabled]}
+          onPress={handleExport}
+          disabled={isExporting}
+        >
+          {isExporting ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Text style={styles.exportButtonText}>Export Data</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.importButton, isImporting && styles.buttonDisabled]}
+          onPress={handleImportPick}
+          disabled={isImporting}
+        >
+          {isImporting ? (
+            <ActivityIndicator size="small" color="#ffffff" />
+          ) : (
+            <Text style={styles.importButtonText}>Import Data</Text>
+          )}
+        </TouchableOpacity>
+
+        <Text style={styles.dataInfo}>
+          Current data: {songs.length} songs, {setlists.length} setlists
+        </Text>
+      </View>
+
       {/* Reset to Defaults */}
       <TouchableOpacity
         style={styles.resetButton}
@@ -429,6 +559,18 @@ export function SettingsScreen() {
           onCancel={() => setShowKeyMappingDialog(false)}
         />
       )}
+
+      {/* Import Mode Dialog */}
+      <ConfirmDialog
+        visible={showImportModeDialog}
+        title="Import Mode"
+        message="Choose how to import the data:\n\n• Merge: Add imported data to existing data\n• Replace: Delete all existing data and import"
+        confirmText="Merge"
+        cancelText="Replace"
+        destructive={false}
+        onConfirm={() => handleImportConfirm('merge')}
+        onCancel={() => handleImportConfirm('replace')}
+      />
 
       {/* Toast for feedback */}
       <Toast
@@ -599,5 +741,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#999999',
     marginBottom: 4,
+  },
+  exportButton: {
+    backgroundColor: '#4caf50',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  exportButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  importButton: {
+    backgroundColor: '#4a9eff',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  importButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  dataInfo: {
+    fontSize: 14,
+    color: '#999999',
+    marginTop: 12,
+    textAlign: 'center',
   },
 });

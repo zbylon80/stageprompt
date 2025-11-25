@@ -265,7 +265,8 @@ function isValidLyricLine(line: any): boolean {
     return false;
   }
 
-  if (typeof line.timeSeconds !== 'number') {
+  // timeSeconds is optional - can be undefined for lines without timing set yet
+  if (line.timeSeconds !== undefined && line.timeSeconds !== null && typeof line.timeSeconds !== 'number') {
     return false;
   }
 

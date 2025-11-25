@@ -623,7 +623,12 @@
   - Fix błędów wykrytych podczas testowania
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 23. Implementacja eksportu i importu danych z cross-platform support
+- [x] 23. Implementacja eksportu i importu danych z cross-platform support
+
+
+
+
+
   - Utworzenie services/exportImportService.ts
   - Implementacja exportAllData (serializacja do JSON)
   - Implementacja validateImportData (walidacja struktury)
@@ -634,11 +639,15 @@
   - Zapewnienie kompatybilności formatów między platformami
   - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 12.3, 12.4_
 
-- [ ] 23.1 Napisanie testów property dla eksportu/importu
+- [x] 23.1 Napisanie testów property dla eksportu/importu
+
+
   - **Property 28: Round-trip eksportu i importu**
   - **Validates: Requirements 11.1, 11.3**
 
-- [ ] 23.2 Napisanie testów property dla cross-platform kompatybilności
+- [x] 23.2 Napisanie testów property dla cross-platform kompatybilności
+
+
   - **Property 30: Cross-platform kompatybilność danych**
   - **Validates: Requirements 12.4, 12.5**
 
