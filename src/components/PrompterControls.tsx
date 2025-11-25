@@ -73,7 +73,7 @@ export function PrompterControls({
         
         {/* Play/Pause button */}
         <TouchableOpacity
-          style={styles.controlButton}
+          style={[styles.controlButton, styles.playPauseButton]}
           onPress={onPlayPause}
           activeOpacity={0.7}
           accessibilityLabel={isPlaying ? 'Pause' : 'Play'}
@@ -146,6 +146,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  playPauseButton: {
+    backgroundColor: '#4caf50', // Success green from UI standards
   },
   controlButtonDisabled: {
     opacity: 0.3,

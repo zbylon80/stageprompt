@@ -11,6 +11,8 @@ import { SetlistEditorScreen } from './src/screens/SetlistEditorScreen';
 import { PrompterScreen } from './src/screens/PrompterScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
 import { RootStackParamList } from './src/types/navigation';
+import { DataProvider } from './src/context/DataContext';
+import { SettingsProvider } from './src/context/SettingsContext';
 
 // Import CSS for web scrollbar styling
 if (Platform.OS === 'web') {
@@ -19,66 +21,82 @@ if (Platform.OS === 'web') {
 
 const Stack = createStackNavigator<RootStackParamList>();
 
+// Helper component for settings button
+const SettingsButton = ({ navigation }: { navigation: any }) => (
+  <TouchableOpacity
+    onPress={() => navigation.navigate('Settings')}
+    style={{ marginRight: 15 }}
+  >
+    <Text style={{ color: '#ffffff', fontSize: 24 }}>⚙</Text>
+  </TouchableOpacity>
+);
+
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar style="light" />
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: '#1a1a1a',
-          },
-          headerTintColor: '#ffffff',
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-        }}
-      >
-        <Stack.Screen
-          name="SetlistList"
-          component={SetlistListScreen}
-          options={({ navigation }) => ({
-            title: 'My Setlists',
-            headerRight: () => (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Settings')}
-                style={{ marginRight: 15 }}
-              >
-                <Text style={{ color: '#ffffff', fontSize: 24 }}>⚙</Text>
-              </TouchableOpacity>
-            ),
-          })}
-        />
-        <Stack.Screen
-          name="SetlistEditor"
-          component={SetlistEditorScreen}
-          options={{ title: 'Edit Setlist' }}
-        />
-        <Stack.Screen
-          name="SongList"
-          component={SongListScreen}
-          options={{ title: 'All Songs' }}
-        />
-        <Stack.Screen
-          name="SongEditor"
-          component={SongEditorScreen}
-          options={{ title: 'Edit Song' }}
-        />
-        <Stack.Screen
-          name="Prompter"
-          component={PrompterScreen}
-          options={{ 
-            title: 'Teleprompter',
-            headerShown: false // Full screen for prompter
-          }}
-        />
-        <Stack.Screen
-          name="Settings"
-          component={SettingsScreen}
-          options={{ title: 'Settings' }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <DataProvider>
+      <SettingsProvider>
+        <NavigationContainer>
+          <StatusBar style="light" />
+          <Stack.Navigator
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: '#1a1a1a',
+              },
+              headerTintColor: '#ffffff',
+              headerTitleStyle: {
+                fontWeight: 'bold',
+              },
+            }}
+          >
+            <Stack.Screen
+              name="SetlistList"
+              component={SetlistListScreen}
+              options={({ navigation }) => ({
+                title: 'My Setlists',
+                headerRight: () => <SettingsButton navigation={navigation} />,
+              })}
+            />
+            <Stack.Screen
+              name="SetlistEditor"
+              component={SetlistEditorScreen}
+              options={({ navigation }) => ({
+                title: 'Edit Setlist',
+                headerRight: () => <SettingsButton navigation={navigation} />,
+              })}
+            />
+            <Stack.Screen
+              name="SongList"
+              component={SongListScreen}
+              options={({ navigation }) => ({
+                title: 'All Songs',
+                headerRight: () => <SettingsButton navigation={navigation} />,
+              })}
+            />
+            <Stack.Screen
+              name="SongEditor"
+              component={SongEditorScreen}
+              options={({ navigation }) => ({
+                title: 'Edit Song',
+                headerRight: () => <SettingsButton navigation={navigation} />,
+              })}
+            />
+            <Stack.Screen
+              name="Prompter"
+              component={PrompterScreen}
+              options={{ 
+                title: 'Teleprompter',
+                headerShown: false // Full screen for prompter
+              }}
+            />
+            <Stack.Screen
+              name="Settings"
+              component={SettingsScreen}
+              options={{ title: 'Settings' }}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </SettingsProvider>
+    </DataProvider>
   );
 }
 

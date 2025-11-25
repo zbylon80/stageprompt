@@ -666,7 +666,12 @@
   - Fix błędów wykrytych podczas testowania
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 25. Implementacja nawigacji aplikacji
+- [x] 25. Implementacja nawigacji aplikacji
+
+
+
+
+
   - Konfiguracja React Navigation (Stack Navigator)
   - Definicja types/navigation.ts z typami nawigacji
   - Utworzenie głównego App.tsx z NavigationContainer
@@ -674,7 +679,12 @@
   - Konfiguracja header options dla każdego ekranu
   - _Requirements: 1.2, 1.3_
 
-- [ ] 26. Implementacja Context Providers
+- [x] 26. Implementacja Context Providers
+
+
+
+
+
   - Utworzenie context/DataContext.tsx (songs, setlists)
   - Utworzenie context/SettingsContext.tsx (app settings)
   - Owinięcie aplikacji w providers
