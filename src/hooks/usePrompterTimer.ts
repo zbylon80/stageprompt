@@ -9,13 +9,19 @@ export interface UsePrompterTimerReturn {
   seek: (time: number) => void;
 }
 
+export interface UsePrompterTimerOptions {
+  durationSeconds?: number;
+}
+
 /**
  * Custom hook for managing the prompter timer.
  * Provides play, pause, reset, and seek functionality with a timer loop.
  * 
+ * @param options - Optional configuration including durationSeconds
  * @returns Timer state and control functions
  */
-export function usePrompterTimer(): UsePrompterTimerReturn {
+export function usePrompterTimer(options?: UsePrompterTimerOptions): UsePrompterTimerReturn {
+  const { durationSeconds } = options || {};
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -53,7 +59,17 @@ export function usePrompterTimer(): UsePrompterTimerReturn {
         const deltaMs = now - lastTickRef.current;
         lastTickRef.current = now;
         
-        setCurrentTime(prevTime => prevTime + deltaMs / 1000);
+        setCurrentTime(prevTime => {
+          const newTime = prevTime + deltaMs / 1000;
+          
+          // Stop at duration if specified
+          if (durationSeconds !== undefined && newTime >= durationSeconds) {
+            setIsPlaying(false);
+            return durationSeconds;
+          }
+          
+          return newTime;
+        });
       }, 50);
     } else {
       // Clear interval when paused
@@ -70,7 +86,7 @@ export function usePrompterTimer(): UsePrompterTimerReturn {
         intervalRef.current = null;
       }
     };
-  }, [isPlaying]);
+  }, [isPlaying, durationSeconds]);
 
   return {
     currentTime,

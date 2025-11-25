@@ -199,26 +199,45 @@
   - Test przywracania wartości przy błędzie (blur)
   - _Requirements: time-input-format/1.1, 1.2, 4.5_
 
-- [ ] 7.7 Dodanie pola Duration w SongEditorScreen
+- [x] 7.7 Dodanie pola Duration w SongEditorScreen
+
+
+
+
+
   - Dodaj stan `durationText` i handlery `handleDurationChange`, `handleDurationBlur`
   - Dodaj pole TextInput dla duration po polu Artist
   - Dodaj komponent ostrzeżenia gdy duration < ostatnia linijka
   - Zaktualizuj placeholder na "e.g., 3:45 or 225"
   - _Requirements: time-input-format/2.1, 2.2, 2.3, 2.4_
 
-- [ ]* 7.7.1 Napisz testy property-based dla duration
+- [x] 7.7.1 Napisz testy property-based dla duration
+
+
+
+
+
+
   - **Property 6: Duration jest zapisywany poprawnie**
   - **Property 7: Ostrzeżenie gdy duration < ostatnia linijka**
   - **Validates: time-input-format/Requirements 2.2, 2.4**
 
-- [ ]* 7.7.2 Napisz testy jednostkowe dla pola duration
+- [x] 7.7.2 Napisz testy jednostkowe dla pola duration
+
+
+
+
+
+
   - Test wprowadzania duration w formacie MM:SS
   - Test wprowadzania duration w formacie sekund
   - Test pustego pola (undefined)
   - Test wyświetlania ostrzeżenia
   - _Requirements: time-input-format/2.1, 2.2, 2.3, 2.4_
 
-- [ ] 7.8 Modyfikacja PrompterScreen - zatrzymanie przy duration
+- [x] 7.8 Modyfikacja PrompterScreen - zatrzymanie przy duration
+
+
   - Zmień `usePrompterTimer` aby sprawdzać `song.durationSeconds`
   - Zatrzymaj timer gdy `currentTime >= durationSeconds`
   - Ustaw `isPlaying = false` przy osiągnięciu duration

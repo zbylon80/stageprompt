@@ -49,7 +49,9 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
   const { keyMapping } = useKeyMapping();
   
   // Timer hook for controlling playback
-  const { currentTime, isPlaying, play, pause, reset } = usePrompterTimer();
+  const { currentTime, isPlaying, play, pause, reset } = usePrompterTimer({
+    durationSeconds: song?.durationSeconds,
+  });
   
   // Reanimated refs and values
   const scrollViewRef = useAnimatedRef<FlatList<LyricLine>>();
