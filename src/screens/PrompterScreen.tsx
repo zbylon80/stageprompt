@@ -228,12 +228,16 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
   const renderLine = ({ item, index }: { item: LyricLine; index: number }) => {
     const showSectionMarker = isFirstLineOfSection(item, index);
     
+    // Hide line if its time hasn't come yet (unless no time is set)
+    const shouldShow = item.timeSeconds === undefined || currentTime >= item.timeSeconds;
+    
     return (
       <View
         style={[
           styles.lineContainer,
           {
             paddingHorizontal: marginHorizontal,
+            opacity: shouldShow ? 1 : 0,
           },
         ]}
       >
@@ -264,7 +268,7 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
             ]}
             numberOfLines={1}
           >
-            {item.text}
+            {shouldShow ? item.text : ''}
           </Text>
         </View>
       </View>
