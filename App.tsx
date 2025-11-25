@@ -3,12 +3,13 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet, Platform } from 'react-native';
+import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
 import { SongListScreen } from './src/screens/SongListScreen';
 import { SongEditorScreen } from './src/screens/SongEditorScreen';
 import { SetlistListScreen } from './src/screens/SetlistListScreen';
 import { SetlistEditorScreen } from './src/screens/SetlistEditorScreen';
 import { PrompterScreen } from './src/screens/PrompterScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 import { RootStackParamList } from './src/types/navigation';
 
 // Import CSS for web scrollbar styling
@@ -17,16 +18,6 @@ if (Platform.OS === 'web') {
 }
 
 const Stack = createStackNavigator<RootStackParamList>();
-
-// Placeholder screens - to be implemented
-
-function SettingsScreen() {
-  return (
-    <View style={styles.placeholder}>
-      <Text style={styles.placeholderText}>Settings - Under Construction</Text>
-    </View>
-  );
-}
 
 export default function App() {
   return (
@@ -46,7 +37,17 @@ export default function App() {
         <Stack.Screen
           name="SetlistList"
           component={SetlistListScreen}
-          options={{ title: 'My Setlists' }}
+          options={({ navigation }) => ({
+            title: 'My Setlists',
+            headerRight: () => (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Settings')}
+                style={{ marginRight: 15 }}
+              >
+                <Text style={{ color: '#ffffff', fontSize: 24 }}>⚙</Text>
+              </TouchableOpacity>
+            ),
+          })}
         />
         <Stack.Screen
           name="SetlistEditor"

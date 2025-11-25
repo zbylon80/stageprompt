@@ -558,7 +558,12 @@
   - Testowanie z klawiaturą (na web/desktop)
   - _Requirements: 6.2_
 
-- [ ] 20. Implementacja ekranu ustawień - wygląd
+- [x] 20. Implementacja ekranu ustawień - wygląd
+
+
+
+
+
   - Utworzenie screens/SettingsScreen.tsx
   - Implementacja sekcji Appearance
   - Implementacja sliderów dla fontSize, anchorYPercent, marginHorizontal
@@ -567,7 +572,9 @@
   - Auto-save ustawień
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 20.1 Napisanie testów property dla ustawień
+- [x] 20.1 Napisanie testów property dla ustawień
+
+
   - **Property 20: Zmiana ustawień aktualizuje konfigurację**
   - **Property 21: Round-trip persystencji ustawień**
   - **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
