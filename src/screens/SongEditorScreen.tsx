@@ -407,7 +407,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
               onPress={handleResetTimes}
               activeOpacity={0.7}
             >
-              <Text style={styles.topButtonText}>🔄 Reset Times</Text>
+              <Text style={styles.topButtonText}>Clear Times</Text>
             </TouchableOpacity>
           )}
           
@@ -417,7 +417,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
               onPress={handleInterpolateTimes}
               activeOpacity={0.7}
             >
-              <Text style={styles.topButtonText}>⚡ Interpolate</Text>
+              <Text style={styles.topButtonText}>Auto-Time</Text>
             </TouchableOpacity>
           )}
           
@@ -427,7 +427,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
               onPress={() => navigation.navigate('Prompter', { songId: song.id })}
               activeOpacity={0.7}
             >
-              <Text style={styles.topButtonText}>▶ Preview</Text>
+              <Text style={styles.topButtonText}>Preview</Text>
             </TouchableOpacity>
           )}
           
@@ -676,7 +676,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
                 onPress={handleResetTimes}
                 activeOpacity={0.7}
               >
-                <Text style={styles.bottomButtonText}>🔄</Text>
+                <Text style={styles.bottomButtonText}>Clear</Text>
               </TouchableOpacity>
             )}
             
@@ -686,7 +686,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
                 onPress={handleInterpolateTimes}
                 activeOpacity={0.7}
               >
-                <Text style={styles.bottomButtonText}>⚡</Text>
+                <Text style={styles.bottomButtonText}>Auto</Text>
               </TouchableOpacity>
             )}
             
@@ -696,7 +696,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
                 onPress={() => navigation.navigate('Prompter', { songId: song.id })}
                 activeOpacity={0.7}
               >
-                <Text style={styles.bottomButtonText}>▶</Text>
+                <Text style={styles.bottomButtonText}>Play</Text>
               </TouchableOpacity>
             )}
             
@@ -799,48 +799,40 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   bottomButton: {
-    backgroundColor: '#2a3a2a',
+    backgroundColor: '#4a9eff',
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#3a4a3a',
+    borderRadius: 8,
     minWidth: 60,
     alignItems: 'center',
   },
   bottomButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#aaaaaa',
+    color: '#ffffff',
   },
   topButton: {
-    backgroundColor: '#2a3a2a',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#3a4a3a',
+    backgroundColor: '#4a9eff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   resetButton: {
-    backgroundColor: '#3a3a2a',
-    borderColor: '#4a4a3a',
+    backgroundColor: '#ff9f40',
   },
   interpolateButton: {
-    backgroundColor: '#4a3a2a',
-    borderColor: '#5a4a3a',
+    backgroundColor: '#9b59b6',
   },
   previewButton: {
-    backgroundColor: '#2a2a3a',
-    borderColor: '#3a3a4a',
+    backgroundColor: '#2ecc71',
   },
   deleteTopButton: {
-    backgroundColor: '#3a2a2a',
-    borderColor: '#4a3a3a',
+    backgroundColor: '#ff5757',
   },
   topButtonText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#aaaaaa',
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
   },
   headerContainer: {
     paddingHorizontal: 16,
