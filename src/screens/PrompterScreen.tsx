@@ -1,6 +1,6 @@
 // screens/PrompterScreen.tsx
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -19,10 +19,13 @@ import { RootStackParamList } from '../types/navigation';
 import { Song, LyricLine } from '../types/models';
 import { storageService } from '../services/storageService';
 import { useSettings } from '../hooks/useSettings';
+import { useKeyMapping } from '../hooks/useKeyMapping';
 import { SectionMarker } from '../components/SectionMarker';
 import { PrompterControls } from '../components/PrompterControls';
 import { usePrompterTimer } from '../hooks/usePrompterTimer';
 import { calculateScrollY } from '../services/scrollAlgorithm';
+import { keyEventService } from '../services/keyEventService';
+import { PrompterAction } from '../types/models';
 
 type PrompterScreenRouteProp = RouteProp<RootStackParamList, 'Prompter'>;
 type PrompterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Prompter'>;
@@ -43,6 +46,7 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
   const [setlistSongIds, setSetlistSongIds] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(-1);
   const { settings } = useSettings();
+  const { keyMapping } = useKeyMapping();
   
   // Timer hook for controlling playback
   const { currentTime, isPlaying, play, pause, reset } = usePrompterTimer();
@@ -120,29 +124,62 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
     reset();
   }, [songId, reset]);
   
-  // Navigation handlers
-  const handlePreviousSong = () => {
+  // Navigation handlers (using useCallback to avoid recreating on every render)
+  const handlePreviousSong = useCallback(() => {
     if (currentIndex > 0 && setlistSongIds.length > 0) {
       const prevSongId = setlistSongIds[currentIndex - 1];
       navigation.replace('Prompter', { songId: prevSongId, setlistId });
     }
-  };
+  }, [currentIndex, setlistSongIds, navigation, setlistId]);
 
-  const handleNextSong = () => {
+  const handleNextSong = useCallback(() => {
     if (currentIndex < setlistSongIds.length - 1 && setlistSongIds.length > 0) {
       const nextSongId = setlistSongIds[currentIndex + 1];
       navigation.replace('Prompter', { songId: nextSongId, setlistId });
     }
-  };
+  }, [currentIndex, setlistSongIds, navigation, setlistId]);
   
   // Play/Pause toggle handler
-  const handlePlayPause = () => {
+  const handlePlayPause = useCallback(() => {
     if (isPlaying) {
       pause();
     } else {
       play();
     }
-  };
+  }, [isPlaying, pause, play]);
+
+  // Initialize and configure key event service
+  useEffect(() => {
+    // Initialize the service
+    keyEventService.initialize();
+
+    // Set up key mapping if available
+    if (keyMapping) {
+      keyEventService.setKeyMapping(keyMapping);
+    }
+
+    // Set up action callback
+    const handleAction = (action: PrompterAction) => {
+      switch (action) {
+        case 'pause':
+          handlePlayPause();
+          break;
+        case 'nextSong':
+          handleNextSong();
+          break;
+        case 'prevSong':
+          handlePreviousSong();
+          break;
+      }
+    };
+
+    keyEventService.onAction(handleAction);
+
+    // Cleanup on unmount
+    return () => {
+      keyEventService.cleanup();
+    };
+  }, [keyMapping, handlePlayPause, handleNextSong, handlePreviousSong]); // Re-initialize when key mapping or handlers change
 
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex >= 0 && currentIndex < setlistSongIds.length - 1;

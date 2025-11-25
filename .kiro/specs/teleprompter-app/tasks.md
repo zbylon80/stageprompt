@@ -508,7 +508,12 @@
   - Fix błędów wykrytych podczas testowania
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 18. Implementacja obsługi zdarzeń klawiatury
+- [x] 18. Implementacja obsługi zdarzeń klawiatury
+
+
+
+
+
   - Utworzenie utils/platform.ts (platform detection)
   - Utworzenie services/keyEventService.ts
   - Instalacja react-native-keyevent (dla Android)
@@ -517,24 +522,37 @@
   - Implementacja graceful degradation (brak Bluetooth)
   - _Requirements: 6.1, 6.3, 6.4, 6.5, 10.3, 10.4_
 
-- [ ] 18.1 Napisanie testów property dla zmapowanych klawiszy
+- [x] 18.1 Napisanie testów property dla zmapowanych klawiszy
+
+
   - **Property 14: Zmapowany klawisz wykonuje akcję**
   - **Validates: Requirements 6.2**
 
-- [ ] 18.2 Napisanie testów property dla niezmapowanych klawiszy
+- [x] 18.2 Napisanie testów property dla niezmapowanych klawiszy
+
+
   - **Property 15: Niezmapowany klawisz nie zmienia stanu**
   - **Validates: Requirements 6.3**
 
-- [ ] 18.3 Napisanie testów property dla debounce
+- [x] 18.3 Napisanie testów property dla debounce
+
+
   - **Property 16: Debounce zapobiega wielokrotnym akcjom**
   - **Validates: Requirements 6.5**
 
-- [ ] 18.4 Napisanie testów property dla cross-platform
+- [x] 18.4 Napisanie testów property dla cross-platform
+
+
   - **Property 26: Klawiatura działa jak kontroler na web/desktop**
   - **Property 27: Graceful degradation bez Bluetooth**
   - **Validates: Requirements 10.3, 10.4**
 
-- [ ] 19. Integracja key events z prompterem
+- [x] 19. Integracja key events z prompterem
+
+
+
+
+
   - Podłączenie keyEventService do PrompterScreen
   - Mapowanie akcji (nextSong, prevSong, pause) do funkcji promptera
   - Testowanie z klawiaturą (na web/desktop)
