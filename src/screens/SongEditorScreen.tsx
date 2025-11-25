@@ -479,6 +479,7 @@ export function SongEditorScreen({ navigation, route }: SongEditorScreenProps) {
           data={song.lines}
           onDragEnd={handleDragEnd}
           keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.webScrollContent}
           renderItem={({ item: line, drag, isActive, getIndex }: RenderItemParams<LyricLine>) => {
             const nextVerseNumber = getNextVerseNumber(song.lines);
             const index = getIndex() ?? 0;
@@ -747,7 +748,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     overflow: 'auto' as any,
     height: '100vh' as any,
-    paddingBottom: 50,
   },
   keyboardAvoidingView: {
     flex: 1,
@@ -762,6 +762,11 @@ const styles = StyleSheet.create({
     // FIX: Extra padding at bottom to prevent content from being hidden
     // behind the sticky bottom action bar (mobile only)
     paddingBottom: 100,
+  },
+  webScrollContent: {
+    paddingVertical: 16,
+    // FIX: Extra padding at bottom for web to ensure last insert button is visible
+    paddingBottom: 150,
   },
   topActions: {
     flexDirection: 'row',

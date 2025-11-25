@@ -5,6 +5,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 import { LyricLine, SongSection } from '../types/models';
 import { SectionMarker } from './SectionMarker';
 import { SectionPicker } from './SectionPicker';
+import { parseTimeInput, formatTimeForEdit } from '../utils/timeFormat';
 
 interface LyricLineEditorProps {
   line: LyricLine;
@@ -36,18 +37,26 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
   onLongPress,
   isActive = false,
 }, ref) => {
-  const [timeText, setTimeText] = React.useState(line.timeSeconds?.toString() || '');
+  const [timeText, setTimeText] = React.useState(formatTimeForEdit(line.timeSeconds));
   const [showSectionPicker, setShowSectionPicker] = React.useState(false);
+  const [isEditingTime, setIsEditingTime] = React.useState(false);
   const textInputRef = React.useRef<TextInput>(null);
   const containerRef = React.useRef<View>(null);
+  const lastTimeSecondsRef = React.useRef(line.timeSeconds);
 
   // Keep local text input in sync when parent updates timeSeconds
+  // BUT only when not actively editing
   useEffect(() => {
-    const nextText = line.timeSeconds?.toString() || '';
-    if (timeText !== nextText) {
-      setTimeText(nextText);
+    // Only update if the timeSeconds actually changed from parent
+    if (line.timeSeconds !== lastTimeSecondsRef.current) {
+      lastTimeSecondsRef.current = line.timeSeconds;
+      
+      // If user is not editing, update the display
+      if (!isEditingTime) {
+        setTimeText(formatTimeForEdit(line.timeSeconds));
+      }
     }
-  }, [line.timeSeconds, timeText]);
+  }, [line.timeSeconds, isEditingTime]);
 
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
@@ -63,11 +72,41 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
     },
   }));
 
+  const handleTimeFocus = () => {
+    setIsEditingTime(true);
+  };
+
   const handleTimeChange = (text: string) => {
     setTimeText(text);
-    const parsed = parseFloat(text);
-    if (!isNaN(parsed) && parsed >= 0) {
-      onUpdateTime(line.id, parsed);
+    
+    // If field is empty, clear the time (set to undefined)
+    if (text.trim() === '') {
+      onUpdateTime(line.id, undefined as any);
+      return;
+    }
+    
+    const result = parseTimeInput(text);
+    if (result.success && result.seconds !== undefined) {
+      onUpdateTime(line.id, result.seconds);
+    }
+  };
+
+  const handleTimeBlur = () => {
+    setIsEditingTime(false);
+    
+    // If field is empty, that's intentional - keep it empty
+    if (timeText.trim() === '') {
+      return;
+    }
+    
+    // On blur, restore the formatted value if the current input is invalid
+    const result = parseTimeInput(timeText);
+    if (!result.success) {
+      // Restore the last valid value
+      setTimeText(formatTimeForEdit(line.timeSeconds));
+    } else if (result.seconds !== undefined) {
+      // Format the valid input consistently
+      setTimeText(formatTimeForEdit(result.seconds));
     }
   };
 
@@ -151,13 +190,15 @@ export const LyricLineEditor = forwardRef<LyricLineEditorRef, LyricLineEditorPro
       />
       
       <View style={styles.timeContainer}>
-        <Text style={styles.timeLabel}>Time (seconds):</Text>
+        <Text style={styles.timeLabel}>Time:</Text>
         <TextInput
           style={styles.timeInput}
           value={timeText}
+          onFocus={handleTimeFocus}
           onChangeText={handleTimeChange}
-          keyboardType="numeric"
-          placeholder="0.0"
+          onBlur={handleTimeBlur}
+          keyboardType="default"
+          placeholder="e.g., 1:14 or 74"
           placeholderTextColor="#666666"
         />
       </View>
