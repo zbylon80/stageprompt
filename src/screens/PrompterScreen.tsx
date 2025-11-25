@@ -20,6 +20,7 @@ import { Song, LyricLine } from '../types/models';
 import { storageService } from '../services/storageService';
 import { useSettings } from '../hooks/useSettings';
 import { SectionMarker } from '../components/SectionMarker';
+import { PrompterControls } from '../components/PrompterControls';
 import { usePrompterTimer } from '../hooks/usePrompterTimer';
 import { calculateScrollY } from '../services/scrollAlgorithm';
 
@@ -264,58 +265,19 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
         )}
         
         {/* Playback controls */}
-        <View style={styles.controls}>
-          {/* Previous song button (only show if in setlist) */}
-          {setlistId && (
-            <TouchableOpacity
-              style={[styles.controlButton, !hasPrevious && styles.controlButtonDisabled]}
-              onPress={handlePreviousSong}
-              disabled={!hasPrevious}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.controlButtonText, { color: textColor }]}>◀</Text>
-            </TouchableOpacity>
-          )}
-          
-          {/* Play/Pause button */}
-          <TouchableOpacity
-            style={styles.controlButton}
-            onPress={handlePlayPause}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.controlButtonText, { color: textColor }]}>
-              {isPlaying ? '⏸' : '▶'}
-            </Text>
-          </TouchableOpacity>
-          
-          {/* Song position info (only show if in setlist) */}
-          {setlistId && (
-            <View style={styles.controlInfo}>
-              <Text style={[styles.controlInfoText, { color: textColor }]}>
-                {currentIndex + 1} / {setlistSongIds.length}
-              </Text>
-            </View>
-          )}
-
-          {/* Next song button (only show if in setlist) */}
-          {setlistId && (
-            <TouchableOpacity
-              style={[styles.controlButton, !hasNext && styles.controlButtonDisabled]}
-              onPress={handleNextSong}
-              disabled={!hasNext}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.controlButtonText, { color: textColor }]}>▶</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-        
-        {/* Timer display */}
-        <View style={styles.timerContainer}>
-          <Text style={[styles.timerText, { color: textColor }]}>
-            {formatTime(currentTime)}
-          </Text>
-        </View>
+        <PrompterControls
+          isPlaying={isPlaying}
+          currentTime={currentTime}
+          onPlayPause={handlePlayPause}
+          onPreviousSong={setlistId ? handlePreviousSong : undefined}
+          onNextSong={setlistId ? handleNextSong : undefined}
+          hasPrevious={hasPrevious}
+          hasNext={hasNext}
+          currentIndex={setlistId ? currentIndex : undefined}
+          totalSongs={setlistId ? setlistSongIds.length : undefined}
+          textColor={textColor}
+          fontSize={fontSize}
+        />
       </View>
 
       {/* Lyrics display with animated scrolling */}
@@ -335,13 +297,6 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
       />
     </SafeAreaView>
   );
-}
-
-// Helper function to format time as MM:SS
-function formatTime(seconds: number): string {
-  const mins = Math.floor(seconds / 60);
-  const secs = Math.floor(seconds % 60);
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 const styles = StyleSheet.create({
@@ -403,49 +358,5 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 18,
     textAlign: 'center',
-  },
-  controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-    marginTop: 12,
-  },
-  controlButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  controlButtonDisabled: {
-    opacity: 0.3,
-  },
-  controlButtonText: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  controlInfo: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 16,
-  },
-  controlInfoText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  timerContainer: {
-    marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    borderRadius: 12,
-  },
-  timerText: {
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
 });

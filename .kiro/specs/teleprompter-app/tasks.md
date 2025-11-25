@@ -457,7 +457,14 @@
   - Test play/pause/reset funkcjonalności
   - _Requirements: 5.1, 5.2_
 
-- [ ] 16. Implementacja kontroli odtwarzania w prompterze
+- [x] 16. Implementacja kontroli odtwarzania w prompterze
+
+
+
+
+
+
+
   - Utworzenie components/PrompterControls.tsx
   - Implementacja przycisków play/pause
   - Implementacja przycisków next/previous song
@@ -465,16 +472,23 @@
   - Obsługa przypadku brzegowego (ostatni utwór w setliście)
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 16.1 Napisanie testów property dla pauzy i wznowienia
+- [x] 16.1 Napisanie testów property dla pauzy i wznowienia
+
+
+
   - **Property 11: Pauza i wznowienie zachowuje pozycję**
   - **Validates: Requirements 5.2**
 
-- [ ] 16.2 Napisanie testów property dla nawigacji w setliście
+- [x] 16.2 Napisanie testów property dla nawigacji w setliście
+
+
   - **Property 12: Nawigacja do następnego utworu w setliście**
   - **Property 13: Nawigacja do poprzedniego utworu w setliście**
   - **Validates: Requirements 5.3, 5.4**
 
-- [ ] 16.3 Napisanie testu unit dla przypadku brzegowego
+- [x] 16.3 Napisanie testu unit dla przypadku brzegowego
+
+
   - Test ostatniego utworu w setliście
   - _Requirements: 5.5_
 
