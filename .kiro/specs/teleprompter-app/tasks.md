@@ -587,7 +587,12 @@
   - Screenshots: settings-default.png, settings-customized.png
   - **Validates: Requirements 9.1, 9.2, 9.3, 9.4, 9.5**
 
-- [ ] 21. Implementacja mapowania klawiszy w ustawieniach
+- [x] 21. Implementacja mapowania klawiszy w ustawieniach
+
+
+
+
+
   - Utworzenie components/KeyMappingDialog.tsx
   - Implementacja UI dla mapowania klawiszy (lista akcji)
   - Implementacja "learn mode" (naciśnij klawisz aby zmapować)
@@ -596,7 +601,9 @@
   - Wyświetlanie aktualnych mapowań
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [ ] 21.1 Napisanie testów property dla mapowania klawiszy
+- [x] 21.1 Napisanie testów property dla mapowania klawiszy
+
+
   - **Property 17: Mapowanie klawisza tworzy powiązanie**
   - **Property 18: Round-trip persystencji mapowań klawiszy**
   - **Property 19: Czyszczenie mapowania usuwa powiązanie**

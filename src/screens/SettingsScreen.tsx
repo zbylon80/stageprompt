@@ -10,19 +10,23 @@ import {
   Platform,
 } from 'react-native';
 import { useSettings } from '../hooks/useSettings';
+import { useKeyMapping } from '../hooks/useKeyMapping';
 import { AppSettings } from '../types/models';
 import Slider from '@react-native-community/slider';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Toast } from '../components/Toast';
+import { KeyMappingDialog } from '../components/KeyMappingDialog';
 
 export function SettingsScreen() {
   const { settings, loading, error, saveSettings } = useSettings();
+  const { keyMapping, loading: keyMappingLoading, saveKeyMapping } = useKeyMapping();
   
   // Local state for live editing
   const [localSettings, setLocalSettings] = useState<AppSettings | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const isResettingRef = React.useRef(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
+  const [showKeyMappingDialog, setShowKeyMappingDialog] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
@@ -86,7 +90,7 @@ export function SettingsScreen() {
     return localSettings?.textColor || '#ffffff';
   };
 
-  if (loading || !localSettings) {
+  if (loading || keyMappingLoading || !localSettings) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#4a9eff" />
@@ -318,6 +322,37 @@ export function SettingsScreen() {
         </View>
       </View>
 
+      {/* Key Mapping Section */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Bluetooth Controller</Text>
+        <Text style={styles.description}>
+          Map keys from your Bluetooth controller to control the prompter
+        </Text>
+        <TouchableOpacity
+          style={styles.keyMappingButton}
+          onPress={() => setShowKeyMappingDialog(true)}
+        >
+          <Text style={styles.keyMappingButtonText}>Configure Key Mapping</Text>
+        </TouchableOpacity>
+        {keyMapping && (
+          <View style={styles.currentMappings}>
+            <Text style={styles.currentMappingsTitle}>Current Mappings:</Text>
+            {keyMapping.nextSong !== undefined && (
+              <Text style={styles.mappingText}>• Next Song: Key {keyMapping.nextSong}</Text>
+            )}
+            {keyMapping.prevSong !== undefined && (
+              <Text style={styles.mappingText}>• Previous Song: Key {keyMapping.prevSong}</Text>
+            )}
+            {keyMapping.pause !== undefined && (
+              <Text style={styles.mappingText}>• Play/Pause: Key {keyMapping.pause}</Text>
+            )}
+            {!keyMapping.nextSong && !keyMapping.prevSong && !keyMapping.pause && (
+              <Text style={styles.mappingText}>No keys mapped yet</Text>
+            )}
+          </View>
+        )}
+      </View>
+
       {/* Reset to Defaults */}
       <TouchableOpacity
         style={styles.resetButton}
@@ -375,6 +410,25 @@ export function SettingsScreen() {
         }}
         onCancel={() => setShowResetDialog(false)}
       />
+
+      {/* Key Mapping Dialog */}
+      {keyMapping && (
+        <KeyMappingDialog
+          visible={showKeyMappingDialog}
+          keyMapping={keyMapping}
+          onSave={async (mapping) => {
+            setShowKeyMappingDialog(false);
+            try {
+              await saveKeyMapping(mapping);
+              showToast('Key mapping saved successfully', 'success');
+            } catch (err) {
+              console.error('Failed to save key mapping:', err);
+              showToast('Failed to save key mapping', 'error');
+            }
+          }}
+          onCancel={() => setShowKeyMappingDialog(false)}
+        />
+      )}
 
       {/* Toast for feedback */}
       <Toast
@@ -516,5 +570,34 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontSize: 14,
     fontStyle: 'italic',
+  },
+  keyMappingButton: {
+    backgroundColor: '#4a9eff',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  keyMappingButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  currentMappings: {
+    marginTop: 16,
+    backgroundColor: '#1a1a1a',
+    padding: 12,
+    borderRadius: 8,
+  },
+  currentMappingsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 8,
+  },
+  mappingText: {
+    fontSize: 14,
+    color: '#999999',
+    marginBottom: 4,
   },
 });
