@@ -679,7 +679,12 @@
   - Optymalizacja re-renderów
   - _Requirements: 1.1, 8.5_
 
-- [ ] 27. Implementacja Error Boundary
+- [x] 27. Implementacja Error Boundary
+
+
+
+
+
   - Utworzenie components/ErrorBoundary.tsx
   - Implementacja getDerivedStateFromError
   - Implementacja componentDidCatch

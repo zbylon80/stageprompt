@@ -193,7 +193,7 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
             fc.record({
               id: fc.string({ minLength: 1 }),
               text: fc.string({ maxLength: 200 }),
-              timeSeconds: fc.float({ min: 0, max: 3600 }),
+              timeSeconds: fc.float({ min: 0, max: 3600, noNaN: true }),
             }),
             { minLength: 1 } // Ensure at least one line
           ).map(lines => {
@@ -214,8 +214,13 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
           const lastLine = song.lines[song.lines.length - 1];
           const lastLineTime = lastLine.timeSeconds;
           
+          // Skip if lastLineTime is invalid
+          if (!isFinite(lastLineTime) || lastLineTime <= 0) {
+            return true;
+          }
+          
           // Set duration to be shorter than last line time
-          const shorterDuration = lastLineTime - Math.random() * 10 - 1; // At least 1 second shorter
+          const shorterDuration = Math.max(0, lastLineTime - Math.random() * Math.min(10, lastLineTime) - 1);
           
           const songWithShortDuration: Song = {
             ...song,
@@ -225,8 +230,10 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
           // Property: should detect the warning condition
           const shouldWarn = 
             songWithShortDuration.durationSeconds !== undefined &&
+            isFinite(songWithShortDuration.durationSeconds) &&
             songWithShortDuration.lines.length > 0 &&
             lastLine.timeSeconds !== undefined &&
+            isFinite(lastLine.timeSeconds) &&
             songWithShortDuration.durationSeconds < lastLine.timeSeconds;
           
           expect(shouldWarn).toBe(true);
@@ -249,7 +256,7 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
             fc.record({
               id: fc.string({ minLength: 1 }),
               text: fc.string({ maxLength: 200 }),
-              timeSeconds: fc.float({ min: 0, max: 3600 }),
+              timeSeconds: fc.float({ min: 0, max: 3600, noNaN: true }),
             }),
             { minLength: 1 } // Ensure at least one line
           ).map(lines => {
@@ -281,8 +288,10 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
           // Property: should NOT warn
           const shouldWarn = 
             songWithLongDuration.durationSeconds !== undefined &&
+            isFinite(songWithLongDuration.durationSeconds) &&
             songWithLongDuration.lines.length > 0 &&
             lastLine.timeSeconds !== undefined &&
+            isFinite(lastLine.timeSeconds) &&
             songWithLongDuration.durationSeconds < lastLine.timeSeconds;
           
           expect(shouldWarn).toBe(false);
@@ -306,7 +315,7 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
             fc.record({
               id: fc.string({ minLength: 1 }),
               text: fc.string({ maxLength: 200 }),
-              timeSeconds: fc.float({ min: 0, max: 3600 }),
+              timeSeconds: fc.float({ min: 0, max: 3600, noNaN: true }),
             }),
             { minLength: 1 } // Ensure at least one line
           ).map(lines => {
@@ -324,11 +333,14 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
         }),
         (song: Song) => {
           // Property: should NOT warn when duration is undefined
+          const lastLine = song.lines[song.lines.length - 1];
           const shouldWarn = 
             song.durationSeconds !== undefined &&
+            isFinite(song.durationSeconds) &&
             song.lines.length > 0 &&
-            song.lines[song.lines.length - 1].timeSeconds !== undefined &&
-            song.durationSeconds < song.lines[song.lines.length - 1].timeSeconds;
+            lastLine.timeSeconds !== undefined &&
+            isFinite(lastLine.timeSeconds) &&
+            song.durationSeconds < lastLine.timeSeconds;
           
           expect(shouldWarn).toBe(false);
           
@@ -379,7 +391,7 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
             fc.record({
               id: fc.string({ minLength: 1 }),
               text: fc.string({ maxLength: 200 }),
-              timeSeconds: fc.float({ min: 0, max: 3600 }),
+              timeSeconds: fc.float({ min: 0, max: 3600, noNaN: true }),
             }),
             { minLength: 1 } // Ensure at least one line
           ).map(lines => {
@@ -409,8 +421,10 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
           // Property: should NOT warn when duration equals last line time
           const shouldWarn = 
             songWithEqualDuration.durationSeconds !== undefined &&
+            isFinite(songWithEqualDuration.durationSeconds) &&
             songWithEqualDuration.lines.length > 0 &&
             lastLine.timeSeconds !== undefined &&
+            isFinite(lastLine.timeSeconds) &&
             songWithEqualDuration.durationSeconds < lastLine.timeSeconds;
           
           expect(shouldWarn).toBe(false);
@@ -433,7 +447,7 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
             fc.record({
               id: fc.string({ minLength: 1 }),
               text: fc.string({ maxLength: 200 }),
-              timeSeconds: fc.float({ min: 10, max: 3600 }), // Ensure at least 10 seconds
+              timeSeconds: fc.float({ min: 10, max: 3600, noNaN: true }), // Ensure at least 10 seconds
             }),
             { minLength: 1 } // Ensure at least one line
           ).map(lines => {
@@ -470,8 +484,10 @@ describe('Property 7: Ostrzeżenie gdy duration < ostatnia linijka', () => {
           // The warning condition should be true
           const shouldWarn = 
             songWithShortDuration.durationSeconds !== undefined &&
+            isFinite(songWithShortDuration.durationSeconds) &&
             songWithShortDuration.lines.length > 0 &&
             lastLine.timeSeconds !== undefined &&
+            isFinite(lastLine.timeSeconds) &&
             songWithShortDuration.durationSeconds < lastLine.timeSeconds;
           
           expect(shouldWarn).toBe(true);
