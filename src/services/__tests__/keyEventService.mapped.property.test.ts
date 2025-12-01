@@ -58,7 +58,7 @@ describe('keyEventService - mapped keys execute actions', () => {
             return true; // Skip this test case
           }
 
-          // Set up key mapping
+          // Set up key mapping FIRST
           const mapping: KeyMapping = {
             nextSong: nextKey,
             prevSong: prevKey,
@@ -66,6 +66,12 @@ describe('keyEventService - mapped keys execute actions', () => {
           };
 
           keyEventService.setKeyMapping(mapping);
+
+          // Initialize the service BEFORE setting up callback
+          // This ensures event listeners are registered
+          if (typeof window !== 'undefined') {
+            keyEventService.initialize();
+          }
 
           // Track which action was called
           let calledAction: PrompterAction | null = null;
@@ -87,12 +93,14 @@ describe('keyEventService - mapped keys execute actions', () => {
               break;
           }
 
-          // Simulate the key event by calling the private method through the public interface
-          // We'll use a workaround: trigger through web keyboard event if on web
+          // Simulate the key event
           if (typeof window !== 'undefined') {
-            keyEventService.initialize();
             const event = new KeyboardEvent('keydown', { keyCode: keyToPress } as any);
             window.dispatchEvent(event);
+            
+            // Verify the correct action was called
+            expect(calledAction).toBe(actionToTest);
+            return calledAction === actionToTest;
           } else {
             // For non-web platforms, we need to test the logic directly
             // Since we can't easily trigger Android events in tests, we'll verify the mapping
@@ -100,10 +108,6 @@ describe('keyEventService - mapped keys execute actions', () => {
             expect(retrievedMapping[actionToTest]).toBe(keyToPress);
             return true;
           }
-
-          // Verify the correct action was called
-          expect(calledAction).toBe(actionToTest);
-          return calledAction === actionToTest;
         }
       ),
       { numRuns: 100 }

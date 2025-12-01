@@ -542,6 +542,7 @@
 
 - [x] 18.1 Napisanie testów property dla zmapowanych klawiszy
 
+
   - **Property 14: Zmapowany klawisz wykonuje akcję**
   - **Validates: Requirements 6.2**
 
@@ -551,6 +552,7 @@
   - **Validates: Requirements 6.3**
 
 - [x] 18.3 Napisanie testów property dla debounce
+
 
   - **Property 16: Debounce zapobiega wielokrotnym akcjom**
   - **Validates: Requirements 6.5**

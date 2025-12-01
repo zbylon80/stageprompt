@@ -24,13 +24,20 @@ import { KeyMapping } from '../../types/models';
 
 jest.useFakeTimers();
 
-// Helper to advance fake timers
+// Helper to advance fake timers and Date.now()
+let mockTime = 0;
 const advance = (ms: number) => {
+  mockTime += ms;
   jest.advanceTimersByTime(ms);
 };
 
 describe('keyEventService - debounce prevents multiple actions', () => {
+  let dateNowSpy: jest.SpyInstance;
+
   beforeEach(() => {
+    mockTime = Date.now(); // Start with current time
+    dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => mockTime);
+    
     keyEventService.cleanup();
     if (typeof (global as any).clearWindowListeners === 'function') {
       (global as any).clearWindowListeners();
@@ -39,6 +46,7 @@ describe('keyEventService - debounce prevents multiple actions', () => {
   });
 
   afterEach(() => {
+    dateNowSpy.mockRestore();
     keyEventService.cleanup();
     jest.clearAllTimers();
   });
@@ -49,6 +57,9 @@ describe('keyEventService - debounce prevents multiple actions', () => {
         fc.integer({ min: 8, max: 222 }),
         fc.integer({ min: 2, max: 5 }), // Number of rapid key presses
         async (keyCode, numPresses) => {
+          // Reset time for each test iteration
+          mockTime = Date.now();
+          
           keyEventService.cleanup();
           if (typeof (global as any).clearWindowListeners === 'function') {
             (global as any).clearWindowListeners();
@@ -92,6 +103,9 @@ describe('keyEventService - debounce prevents multiple actions', () => {
   });
 
   it('Property 16 (unit test variant): Debounce prevents rapid key presses', async () => {
+    // Reset time for this test
+    mockTime = Date.now();
+    
     const mapping: KeyMapping = {
       nextSong: 39, // Right arrow
     };
@@ -128,6 +142,9 @@ describe('keyEventService - debounce prevents multiple actions', () => {
   });
 
   it('Property 16 (edge case): Different keys are not debounced together', async () => {
+    // Reset time for this test
+    mockTime = Date.now();
+    
     const mapping: KeyMapping = {
       nextSong: 39, // Right arrow
       prevSong: 37, // Left arrow
