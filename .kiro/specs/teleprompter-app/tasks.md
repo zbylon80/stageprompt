@@ -268,7 +268,12 @@
   - Test ostrzeżenia gdy duration < ostatnia linijka
   - _Requirements: time-input-format/2.4, 4.2_
 
-- [ ] 7.10 Testy kompatybilności wstecznej dla formatu czasu
+- [x] 7.10 Testy kompatybilności wstecznej dla formatu czasu
+
+
+
+
+
   - Stwórz testowe dane w starym formacie (timeSeconds jako liczby)
   - Sprawdź ładowanie starych danych
   - Sprawdź zapis danych (powinien zachować format sekund)
