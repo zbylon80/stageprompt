@@ -284,7 +284,12 @@
   - **Property 10: Kompatybilność wsteczna - zapis**
   - **Validates: time-input-format/Requirements 5.1, 5.3, 5.4, 5.5**
 
-- [ ] 7.11 Checkpoint - Format czasu MM:SS i Duration
+- [x] 7.11 Checkpoint - Format czasu MM:SS i Duration
+
+
+
+
+
   - Upewnij się że wszystkie testy przechodzą
   - Przetestuj wprowadzanie czasu w różnych formatach
   - Przetestuj pole duration
