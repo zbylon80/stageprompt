@@ -116,6 +116,17 @@ export function SetlistListScreen({ navigation }: SetlistListScreenProps) {
           setlists.length === 0 ? styles.emptyListContent : styles.listContent
         }
         ListEmptyComponent={renderEmptyState}
+        // Performance optimizations
+        removeClippedSubviews={Platform.OS !== 'web'}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={15}
+        // Approximate item height for better performance
+        getItemLayout={(data, index) => ({
+          length: 76, // Approximate height of setlist item
+          offset: 76 * index,
+          index,
+        })}
       />
     );
   };

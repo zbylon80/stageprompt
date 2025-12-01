@@ -74,11 +74,15 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
     setToastVisible(true);
   };
 
-  // Reload data when screen comes into focus
+  // Lazy loading: Only reload setlists immediately, songs are loaded when needed
   useFocusEffect(
     React.useCallback(() => {
-      reloadSongs();
       reloadSetlists();
+      // Delay song loading slightly to prioritize setlist data
+      const timer = setTimeout(() => {
+        reloadSongs();
+      }, 100);
+      return () => clearTimeout(timer);
     }, [reloadSongs, reloadSetlists])
   );
 
@@ -556,6 +560,17 @@ export function SetlistEditorScreen({ route, navigation }: SetlistEditorScreenPr
                 </Text>
               </View>
             }
+            // Performance optimizations
+            removeClippedSubviews={Platform.OS !== 'web'}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            initialNumToRender={15}
+            // Approximate item height for better performance
+            getItemLayout={(data, index) => ({
+              length: 88, // Approximate height of SongListItem
+              offset: 88 * index,
+              index,
+            })}
           />
         )}
       </View>

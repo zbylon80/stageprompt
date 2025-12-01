@@ -26,6 +26,7 @@ import { usePrompterTimer } from '../hooks/usePrompterTimer';
 import { calculateScrollY } from '../services/scrollAlgorithm';
 import { keyEventService } from '../services/keyEventService';
 import { PrompterAction } from '../types/models';
+import { throttle } from '../utils/throttle';
 
 type PrompterScreenRouteProp = RouteProp<RootStackParamList, 'Prompter'>;
 type PrompterScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Prompter'>;
@@ -106,6 +107,14 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
   const [screenHeight, setScreenHeight] = useState(0);
   const anchorY = screenHeight * anchorYPercent;
 
+  // Throttled scroll calculation to improve performance
+  // Throttle to 60fps (16.67ms) to avoid excessive calculations
+  const throttledScrollTo = useRef(
+    throttle((targetY: number) => {
+      scrollTo(scrollViewRef, 0, targetY, true);
+    }, 16)
+  ).current;
+
   // Effect to calculate and animate scroll position based on timer
   useEffect(() => {
     if (!song || !song.lines.length || screenHeight === 0) return;
@@ -117,9 +126,9 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
       anchorY,
     });
     
-    // Animate scroll to target position
-    scrollTo(scrollViewRef, 0, targetScrollY, true);
-  }, [currentTime, song, lineHeight, anchorY, screenHeight]);
+    // Use throttled scroll to avoid excessive updates
+    throttledScrollTo(targetScrollY);
+  }, [currentTime, song, lineHeight, anchorY, screenHeight, throttledScrollTo]);
   
   // Reset timer when song changes
   useEffect(() => {
@@ -337,6 +346,12 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
         maxToRenderPerBatch={10}
         windowSize={5}
         initialNumToRender={10}
+        // getItemLayout for constant height items improves performance
+        getItemLayout={(data, index) => ({
+          length: lineHeight,
+          offset: lineHeight * index,
+          index,
+        })}
       />
     </SafeAreaView>
   );

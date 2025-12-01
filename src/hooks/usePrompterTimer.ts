@@ -80,6 +80,7 @@ export function usePrompterTimer(options?: UsePrompterTimerOptions): UsePrompter
     }
 
     // Cleanup on unmount or when isPlaying changes
+    // This ensures timers are always cleaned up properly
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -87,6 +88,16 @@ export function usePrompterTimer(options?: UsePrompterTimerOptions): UsePrompter
       }
     };
   }, [isPlaying, durationSeconds]);
+
+  // Additional cleanup on unmount to ensure no memory leaks
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, []);
 
   return {
     currentTime,

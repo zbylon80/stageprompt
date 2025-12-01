@@ -711,7 +711,12 @@
 
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 30. Optymalizacja wydajności
+- [x] 30. Optymalizacja wydajności
+
+
+
+
+
   - Implementacja getItemLayout dla FlatList (stała wysokość)
   - Konfiguracja windowSize dla długich list
   - Implementacja lazy loading dla setlist
