@@ -9,6 +9,13 @@ export function validateSong(song: Partial<Song>): string[] {
     errors.push('Title is required');
   }
 
+  // Validate durationSeconds
+  if (song.durationSeconds !== undefined && song.durationSeconds !== null) {
+    if (song.durationSeconds < 0) {
+      errors.push('Duration cannot be negative');
+    }
+  }
+
   if (song.lines) {
     song.lines.forEach((line, index) => {
       // Only validate if time is set (not undefined)
@@ -24,6 +31,19 @@ export function validateSong(song: Partial<Song>): string[] {
         errors.push(`Line ${index + 1}: time must be greater than previous line`);
       }
     });
+
+    // Warning (not error) if duration is less than the last line's time
+    if (song.durationSeconds !== undefined && song.durationSeconds !== null && song.lines.length > 0) {
+      const lastLine = song.lines[song.lines.length - 1];
+      if (lastLine.timeSeconds !== undefined && lastLine.timeSeconds !== null) {
+        if (song.durationSeconds < lastLine.timeSeconds) {
+          console.warn(
+            `Warning: Song duration (${song.durationSeconds}s) is less than the last line's time (${lastLine.timeSeconds}s). ` +
+            `The prompter may stop before displaying all lyrics.`
+          );
+        }
+      }
+    }
   }
 
   return errors;

@@ -252,7 +252,12 @@
   - Test działania bez duration (undefined)
   - _Requirements: time-input-format/2.5_
 
-- [ ] 7.9 Aktualizacja walidacji dla duration
+- [x] 7.9 Aktualizacja walidacji dla duration
+
+
+
+
+
   - Dodaj walidację `durationSeconds` w `validation.ts` (odrzuć ujemne wartości)
   - Dodaj ostrzeżenie (console.warn) gdy duration < ostatnia linijka
   - Nie dodawaj ostrzeżenia do tablicy errors (to nie jest błąd blokujący)
