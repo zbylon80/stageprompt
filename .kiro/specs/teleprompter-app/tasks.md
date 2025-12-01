@@ -692,7 +692,12 @@
   - Owinięcie aplikacji w ErrorBoundary
   - _Requirements: 9.4_
 
-- [ ] 28. Dodanie funkcji "Dodaj do Setlisty" w SongListScreen
+- [x] 28. Dodanie funkcji "Dodaj do Setlisty" w SongListScreen
+
+
+
+
+
   - Implementacja modal/dialog z listą setlist
   - Implementacja dodawania utworu do wybranej setlisty
   - Feedback dla użytkownika (toast/snackbar)

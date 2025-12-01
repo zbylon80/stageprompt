@@ -9,9 +9,10 @@ interface SongListItemProps {
   onPress: (song: Song) => void;
   onDelete?: (song: Song) => void;
   onPreview?: (song: Song) => void;
+  onAddToSetlist?: (song: Song) => void;
 }
 
-export function SongListItem({ song, onPress, onDelete, onPreview }: SongListItemProps) {
+export function SongListItem({ song, onPress, onDelete, onPreview, onAddToSetlist }: SongListItemProps) {
   const handleDelete = (e: any) => {
     e.stopPropagation();
     if (onDelete) {
@@ -23,6 +24,13 @@ export function SongListItem({ song, onPress, onDelete, onPreview }: SongListIte
     e.stopPropagation();
     if (onPreview) {
       onPreview(song);
+    }
+  };
+
+  const handleAddToSetlist = (e: any) => {
+    e.stopPropagation();
+    if (onAddToSetlist) {
+      onAddToSetlist(song);
     }
   };
 
@@ -48,6 +56,16 @@ export function SongListItem({ song, onPress, onDelete, onPreview }: SongListIte
           </Text>
         </View>
         <View style={styles.actions}>
+          {onAddToSetlist && (
+            <TouchableOpacity
+              style={styles.addToSetlistButton}
+              onPress={handleAddToSetlist}
+              activeOpacity={0.7}
+              testID={`add-to-setlist-${song.id}`}
+            >
+              <Text style={styles.addToSetlistText}>+♫</Text>
+            </TouchableOpacity>
+          )}
           {onPreview && song.lines.length > 0 && (
             <TouchableOpacity
               style={styles.previewButton}
@@ -114,6 +132,20 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: 'row',
     gap: 8,
+  },
+  addToSetlistButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#9b59b6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addToSetlistText: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '600',
+    lineHeight: 16,
   },
   previewButton: {
     width: 36,

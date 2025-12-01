@@ -11,15 +11,18 @@ import {
   Platform,
   ScrollView,
   TextInput,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSongs } from '../hooks/useSongs';
+import { useSetlists } from '../hooks/useSetlists';
 import { SongListItem } from '../components/SongListItem';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Toast } from '../components/Toast';
 import { RootStackParamList } from '../types/navigation';
-import { Song } from '../types/models';
+import { Song, Setlist } from '../types/models';
 import { generateId } from '../utils/idGenerator';
 
 type SongListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SongList'>;
@@ -30,15 +33,28 @@ interface SongListScreenProps {
 
 export function SongListScreen({ navigation }: SongListScreenProps) {
   const { songs, loading, error, reload, deleteSong } = useSongs();
+  const { setlists, saveSetlist, reload: reloadSetlists } = useSetlists();
   const [songToDelete, setSongToDelete] = useState<Song | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [songToAddToSetlist, setSongToAddToSetlist] = useState<Song | null>(null);
+  const [showSetlistModal, setShowSetlistModal] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
 
-  // Reload songs when screen comes into focus
+  // Reload songs and setlists when screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
       reload();
-    }, [reload])
+      reloadSetlists();
+    }, [reload, reloadSetlists])
   );
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setToastVisible(true);
+  };
 
   const handleSongPress = (song: Song) => {
     navigation.navigate('SongEditor', { song });
@@ -79,6 +95,68 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
     setSongToDelete(null);
   };
 
+  const handleAddToSetlist = (song: Song) => {
+    setSongToAddToSetlist(song);
+    setShowSetlistModal(true);
+  };
+
+  const handleSelectSetlist = async (setlist: Setlist) => {
+    if (!songToAddToSetlist) return;
+
+    try {
+      // Check if song is already in the setlist
+      if (setlist.songIds.includes(songToAddToSetlist.id)) {
+        showToast(`"${songToAddToSetlist.title}" is already in "${setlist.name}"`, 'info');
+        setShowSetlistModal(false);
+        setSongToAddToSetlist(null);
+        return;
+      }
+
+      // Add song to setlist
+      const updatedSetlist: Setlist = {
+        ...setlist,
+        songIds: [...setlist.songIds, songToAddToSetlist.id],
+        updatedAt: Date.now(),
+      };
+
+      await saveSetlist(updatedSetlist);
+      showToast(`Added "${songToAddToSetlist.title}" to "${setlist.name}"`, 'success');
+      setShowSetlistModal(false);
+      setSongToAddToSetlist(null);
+    } catch (err) {
+      console.error('Failed to add song to setlist:', err);
+      showToast('Failed to add song to setlist', 'error');
+    }
+  };
+
+  const handleCancelAddToSetlist = () => {
+    setShowSetlistModal(false);
+    setSongToAddToSetlist(null);
+  };
+
+  const handleCreateNewSetlist = () => {
+    if (!songToAddToSetlist) return;
+
+    const newSetlist: Setlist = {
+      id: generateId(),
+      name: 'New Setlist',
+      songIds: [songToAddToSetlist.id],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    saveSetlist(newSetlist)
+      .then(() => {
+        showToast(`Created "New Setlist" with "${songToAddToSetlist.title}"`, 'success');
+        setShowSetlistModal(false);
+        setSongToAddToSetlist(null);
+      })
+      .catch((err) => {
+        console.error('Failed to create setlist:', err);
+        showToast('Failed to create setlist', 'error');
+      });
+  };
+
   // Filter and sort songs
   const filteredAndSortedSongs = useMemo(() => {
     let filtered = songs;
@@ -116,6 +194,7 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
       onPress={handleSongPress} 
       onDelete={handleDeleteSong}
       onPreview={handleSongPreview}
+      onAddToSetlist={handleAddToSetlist}
     />
   );
 
@@ -241,6 +320,73 @@ export function SongListScreen({ navigation }: SongListScreenProps) {
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
         destructive
+      />
+
+      <Modal
+        visible={showSetlistModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelAddToSetlist}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Add to Setlist</Text>
+            <Text style={styles.modalSubtitle}>
+              {songToAddToSetlist?.title}
+            </Text>
+
+            <ScrollView style={styles.setlistList}>
+              {setlists.length === 0 ? (
+                <View style={styles.emptySetlistContainer}>
+                  <Text style={styles.emptySetlistText}>
+                    No setlists yet. Create one below!
+                  </Text>
+                </View>
+              ) : (
+                setlists.map((setlist) => (
+                  <TouchableOpacity
+                    key={setlist.id}
+                    style={styles.setlistItem}
+                    onPress={() => handleSelectSetlist(setlist)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.setlistItemContent}>
+                      <Text style={styles.setlistItemName}>{setlist.name}</Text>
+                      <Text style={styles.setlistItemInfo}>
+                        {setlist.songIds.length} {setlist.songIds.length === 1 ? 'song' : 'songs'}
+                      </Text>
+                    </View>
+                    <Text style={styles.setlistItemArrow}>›</Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalButtonSecondary}
+                onPress={handleCreateNewSetlist}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalButtonSecondaryText}>+ New Setlist</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonPrimary}
+                onPress={handleCancelAddToSetlist}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalButtonPrimaryText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
       />
     </>
   );
@@ -382,5 +528,99 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: '#ffffff',
     fontWeight: '400',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 12,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 16,
+    color: '#cccccc',
+    marginBottom: 20,
+  },
+  setlistList: {
+    maxHeight: 300,
+    marginBottom: 20,
+  },
+  emptySetlistContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptySetlistText: {
+    fontSize: 14,
+    color: '#999999',
+    textAlign: 'center',
+  },
+  setlistItem: {
+    backgroundColor: '#3a3a3a',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  setlistItemContent: {
+    flex: 1,
+  },
+  setlistItemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+    marginBottom: 4,
+  },
+  setlistItemInfo: {
+    fontSize: 12,
+    color: '#999999',
+  },
+  setlistItemArrow: {
+    fontSize: 24,
+    color: '#666666',
+    marginLeft: 12,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButtonPrimary: {
+    flex: 1,
+    backgroundColor: '#4a9eff',
+    borderRadius: 8,
+    padding: 14,
+    alignItems: 'center',
+  },
+  modalButtonPrimaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
+  },
+  modalButtonSecondary: {
+    flex: 1,
+    backgroundColor: '#9b59b6',
+    borderRadius: 8,
+    padding: 14,
+    alignItems: 'center',
+  },
+  modalButtonSecondaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });
