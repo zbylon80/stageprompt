@@ -66,24 +66,30 @@ src/
 │   ├── SongListItem.tsx
 │   ├── LyricLineEditor.tsx
 │   ├── PrompterControls.tsx
-│   └── KeyMappingDialog.tsx
+│   ├── KeyMappingDialog.tsx
+│   ├── S18ConfigurationPanel.tsx      # NOWY - Konfiguracja S18
+│   ├── S18ButtonTester.tsx            # NOWY - Testowanie przycisków
+│   └── S18ClickZonesPreview.tsx       # NOWY - Preview stref kliknięć
 ├── services/        # Logika biznesowa
 │   ├── storageService.ts
 │   ├── scrollAlgorithm.ts
 │   ├── keyEventService.ts
+│   ├── s18ControllerService.ts        # NOWY - Obsługa kontrolera S18
 │   └── exportImportService.ts
 ├── hooks/           # Custom React hooks
 │   ├── useSongs.ts
 │   ├── useSetlists.ts
 │   ├── useSettings.ts
 │   ├── usePrompterTimer.ts
-│   └── useKeyMapping.ts
+│   ├── useKeyMapping.ts
+│   └── useS18Controller.ts            # NOWY - Hook dla S18
 ├── context/         # React Context dla globalnego stanu
 │   ├── DataContext.tsx
 │   └── SettingsContext.tsx
 └── utils/           # Funkcje pomocnicze
     ├── validation.ts
-    └── platform.ts
+    ├── platform.ts
+    └── s18Detection.ts                # NOWY - Wykrywanie S18
 ```
 
 ### Diagram Przepływu Danych
@@ -148,6 +154,8 @@ export interface AppSettings {
   backgroundColor: string;    // hex color
   marginHorizontal: number;   // pixels
   lineHeight: number;         // pixels (default 60)
+  scrollSpeedMultiplier: number; // 0.5-2.0 (default 1.0)
+  showTouchHints: boolean;    // Show visual hints for touch controls
 }
 
 export interface KeyMapping {
@@ -156,7 +164,37 @@ export interface KeyMapping {
   pause?: number;       // keyCode
 }
 
-export type PrompterAction = 'nextSong' | 'prevSong' | 'pause';
+// S18 Controller specific types
+export type S18ButtonType = 'up' | 'down' | 'left' | 'right' | 'touch' | 'auxiliary';
+
+export interface S18ButtonMapping {
+  up: PrompterAction;         // Default: 'increaseSpeed'
+  down: PrompterAction;       // Default: 'decreaseSpeed'
+  left: PrompterAction;       // Default: 'prevSong'
+  right: PrompterAction;      // Default: 'nextSong'
+  touch: PrompterAction;      // Default: 'pause'
+  auxiliary?: PrompterAction; // Optional: custom action
+}
+
+export interface S18ControllerConfig {
+  enabled: boolean;
+  mode: 'mouse' | 'keyboard';  // Detection mode
+  buttonMapping: S18ButtonMapping;
+  clickZones: {
+    left: { x: number; width: number };    // Left zone for prev
+    center: { x: number; width: number };  // Center zone for pause
+    right: { x: number; width: number };   // Right zone for next
+  };
+  sensitivity: number;  // 0.5-2.0 for speed adjustments
+}
+
+export type PrompterAction = 
+  | 'nextSong' 
+  | 'prevSong' 
+  | 'pause' 
+  | 'increaseSpeed' 
+  | 'decreaseSpeed'
+  | 'resetSpeed';
 ```
 
 ### Główne Ekrany
@@ -254,6 +292,8 @@ interface EditorState {
 - Płynne przewijanie zsynchronizowane z czasem
 - Kontrola odtwarzania
 - Obsługa kontrolera zewnętrznego
+- Obsługa kontrolera S18 (NOWY)
+- Dynamiczna prędkość przewijania (NOWY)
 
 **Stan:**
 ```typescript
@@ -262,14 +302,62 @@ interface PrompterState {
   currentTime: number;
   isPlaying: boolean;
   scrollY: Animated.Value;
+  scrollSpeedMultiplier: number;  // NOWY - 0.5 to 2.0
 }
 ```
 
 **Kluczowe Funkcje:**
-- Timer loop (useEffect z setInterval)
+- Timer loop (useEffect z setInterval) - z uwzględnieniem scrollSpeedMultiplier
 - Scroll calculation (scrollAlgorithm.ts)
 - Animated scroll
 - Key event handling
+- S18 controller action handling (NOWY)
+- Speed adjustment (NOWY)
+
+**Integracja z S18:**
+
+```typescript
+// W PrompterScreen
+const { config: s18Config, isEnabled: s18Enabled } = useS18Controller();
+
+useEffect(() => {
+  if (s18Enabled) {
+    s18ControllerService.onAction((action) => {
+      handleS18Action(action);
+    });
+  }
+}, [s18Enabled]);
+
+const handleS18Action = (action: PrompterAction) => {
+  switch (action) {
+    case 'nextSong':
+      goToNextSong();
+      break;
+    case 'prevSong':
+      goToPrevSong();
+      break;
+    case 'pause':
+      togglePlayPause();
+      break;
+    case 'increaseSpeed':
+      adjustSpeed(1.1); // +10%
+      break;
+    case 'decreaseSpeed':
+      adjustSpeed(0.9); // -10%
+      break;
+    case 'resetSpeed':
+      setScrollSpeedMultiplier(1.0);
+      break;
+  }
+};
+
+const adjustSpeed = (factor: number) => {
+  setScrollSpeedMultiplier(prev => {
+    const newSpeed = prev * factor;
+    return Math.max(0.5, Math.min(2.0, newSpeed)); // Clamp 0.5-2.0
+  });
+};
+```
 
 #### 6. SettingsScreen
 
@@ -277,11 +365,144 @@ interface PrompterState {
 - Konfiguracja wyglądu promptera
 - Mapowanie klawiszy
 - Import/export danych
+- Konfiguracja kontrolera S18
 
 **Sekcje:**
 - Appearance settings
 - Key mapping configuration
+- S18 Controller configuration (nowa sekcja)
 - Data management
+
+**Nowa Sekcja - S18 Controller:**
+
+```typescript
+interface S18ConfigSectionProps {
+  config: S18ControllerConfig;
+  onConfigChange: (config: S18ControllerConfig) => void;
+}
+```
+
+**Komponenty w sekcji S18:**
+- Toggle "Enable S18 Controller"
+- Mode selector (Mouse / Keyboard / Auto-detect)
+- Button mapping editor
+- Test buttons interface
+- Click zones configuration (dla trybu myszy)
+- Sensitivity slider
+
+### Komponenty
+
+#### S18ConfigurationPanel
+
+**Nowy komponent dla konfiguracji kontrolera S18:**
+
+```typescript
+interface S18ConfigurationPanelProps {
+  config: S18ControllerConfig;
+  onSave: (config: S18ControllerConfig) => void;
+  onCancel: () => void;
+}
+```
+
+**Funkcjonalności:**
+
+1. **Mode Selection**
+   - Radio buttons: Mouse / Keyboard / Auto-detect
+   - Opis każdego trybu
+   - Automatyczne wykrywanie (przycisk "Detect")
+
+2. **Button Mapping Editor**
+   - Lista przycisków S18 (Up, Down, Left, Right, Touch, Auxiliary)
+   - Dropdown dla każdego przycisku z dostępnymi akcjami
+   - Domyślne mapowanie:
+     - Up → Increase Speed
+     - Down → Decrease Speed
+     - Left → Previous Song
+     - Right → Next Song
+     - Touch → Pause/Play
+
+3. **Button Testing Interface**
+   - Przycisk "Test Buttons"
+   - Wizualizacja każdego przycisku S18
+   - Real-time feedback przy naciśnięciu
+   - Wyświetlanie wykrytej akcji
+
+4. **Click Zones Configuration** (tylko dla trybu myszy)
+   - Wizualizacja ekranu podzielonego na 3 strefy
+   - Slider do dostosowania szerokości stref
+   - Preview z ikonami akcji
+
+5. **Sensitivity Settings**
+   - Slider dla czułości zmian prędkości (0.5x - 2.0x)
+   - Preview aktualnej wartości
+
+**Layout:**
+
+```
+┌─────────────────────────────────────┐
+│ S18 Controller Configuration        │
+├─────────────────────────────────────┤
+│ [✓] Enable S18 Controller           │
+│                                     │
+│ Mode: ○ Mouse ● Keyboard ○ Auto    │
+│       [Detect Mode]                 │
+│                                     │
+│ Button Mapping:                     │
+│ ┌─────────────────────────────────┐ │
+│ │ Up:    [Increase Speed ▼]      │ │
+│ │ Down:  [Decrease Speed ▼]      │ │
+│ │ Left:  [Previous Song  ▼]      │ │
+│ │ Right: [Next Song      ▼]      │ │
+│ │ Touch: [Pause/Play     ▼]      │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ [Test Buttons]                      │
+│ ┌─────────────────────────────────┐ │
+│ │     ▲                           │ │
+│ │   ◄ ● ►  [Touch]               │ │
+│ │     ▼                           │ │
+│ │ Status: Waiting...              │ │
+│ └─────────────────────────────────┘ │
+│                                     │
+│ Sensitivity: [====●====] 1.0x      │
+│                                     │
+│ [Save]  [Cancel]  [Reset Defaults] │
+└─────────────────────────────────────┘
+```
+
+#### S18ButtonTester
+
+**Komponent do testowania przycisków:**
+
+```typescript
+interface S18ButtonTesterProps {
+  onButtonDetected: (button: S18ButtonType, action: PrompterAction) => void;
+  isActive: boolean;
+}
+```
+
+**Funkcjonalności:**
+- Wizualizacja układu przycisków S18
+- Real-time highlighting przy naciśnięciu
+- Wyświetlanie wykrytej akcji
+- Timeout po 5 sekundach bez aktywności
+
+#### S18ClickZonesPreview
+
+**Komponent do konfiguracji stref kliknięć:**
+
+```typescript
+interface S18ClickZonesPreviewProps {
+  zones: S18ControllerConfig['clickZones'];
+  onZonesChange: (zones: S18ControllerConfig['clickZones']) => void;
+}
+```
+
+**Funkcjonalności:**
+- Wizualizacja 3 stref (lewo, środek, prawo)
+- Interaktywne dostosowanie szerokości
+- Ikony akcji w każdej strefie
+- Preview w skali ekranu promptera
 
 ### Serwisy
 
@@ -307,6 +528,10 @@ interface StorageService {
   saveKeyMapping(mapping: KeyMapping): Promise<void>;
   loadKeyMapping(): Promise<KeyMapping>;
   
+  // S18 Controller Config (NOWY)
+  saveS18Config(config: S18ControllerConfig): Promise<void>;
+  loadS18Config(): Promise<S18ControllerConfig | null>;
+  
   // Export/Import
   exportData(): Promise<string>; // JSON string
   importData(jsonString: string): Promise<void>;
@@ -319,6 +544,7 @@ interface StorageService {
 - Setlists: `@setlists:${id}`
 - Settings: `@settings`
 - KeyMapping: `@keyMapping`
+- S18Config: `@s18_config` (NOWY)
 - Index arrays: `@songs_index`, `@setlists_index`
 
 #### scrollAlgorithm.ts
@@ -561,6 +787,141 @@ interface KeyEventService {
 - Debouncing (300ms) dla zapobiegania wielokrotnym akcjom
 - Platform detection dla graceful degradation
 
+#### s18ControllerService.ts
+
+**Nowy serwis dedykowany dla kontrolera S18:**
+
+```typescript
+interface S18ControllerService {
+  initialize(config: S18ControllerConfig): void;
+  cleanup(): void;
+  setConfig(config: S18ControllerConfig): void;
+  onAction(callback: (action: PrompterAction) => void): void;
+  detectMode(): 'mouse' | 'keyboard' | 'unknown';
+  testButton(button: S18ButtonType): Promise<boolean>;
+}
+```
+
+**Implementacja:**
+
+```typescript
+// services/s18ControllerService.ts
+
+class S18ControllerServiceImpl implements S18ControllerService {
+  private config: S18ControllerConfig;
+  private actionCallback?: (action: PrompterAction) => void;
+  private lastActionTime: number = 0;
+  private debounceMs: number = 300;
+  
+  initialize(config: S18ControllerConfig): void {
+    this.config = config;
+    
+    if (!config.enabled) return;
+    
+    if (config.mode === 'mouse') {
+      this.initializeMouseMode();
+    } else if (config.mode === 'keyboard') {
+      this.initializeKeyboardMode();
+    }
+  }
+  
+  private initializeMouseMode(): void {
+    // Obsługa kliknięć w zdefiniowanych obszarach ekranu
+    // Kontroler S18 w trybie myszy wysyła kliknięcia
+    // Używamy PrompterTouchControls do wykrywania kliknięć
+  }
+  
+  private initializeKeyboardMode(): void {
+    // Obsługa zdarzeń klawiatury z kontrolera S18
+    // Jeśli kontroler działa jako klawiatura, używamy keyEventService
+    if (Platform.OS === 'android') {
+      KeyEvent.onKeyDownListener((keyEvent) => {
+        this.handleKeyEvent(keyEvent.keyCode);
+      });
+    } else if (Platform.OS === 'web') {
+      document.addEventListener('keydown', (e) => {
+        this.handleKeyEvent(e.keyCode);
+      });
+    }
+  }
+  
+  private handleKeyEvent(keyCode: number): void {
+    const now = Date.now();
+    if (now - this.lastActionTime < this.debounceMs) return;
+    
+    const action = this.mapKeyCodeToAction(keyCode);
+    if (action && this.actionCallback) {
+      this.actionCallback(action);
+      this.lastActionTime = now;
+    }
+  }
+  
+  private mapKeyCodeToAction(keyCode: number): PrompterAction | null {
+    // Mapowanie kodów klawiszy na akcje
+    // Kody dla S18 w trybie klawiatury (do ustalenia przez testy)
+    const keyMap: Record<number, S18ButtonType> = {
+      19: 'up',      // KEYCODE_DPAD_UP
+      20: 'down',    // KEYCODE_DPAD_DOWN
+      21: 'left',    // KEYCODE_DPAD_LEFT
+      22: 'right',   // KEYCODE_DPAD_RIGHT
+      66: 'touch',   // KEYCODE_ENTER (przykład)
+    };
+    
+    const button = keyMap[keyCode];
+    if (!button) return null;
+    
+    return this.config.buttonMapping[button];
+  }
+  
+  onAction(callback: (action: PrompterAction) => void): void {
+    this.actionCallback = callback;
+  }
+  
+  detectMode(): 'mouse' | 'keyboard' | 'unknown' {
+    // Automatyczne wykrywanie trybu kontrolera
+    // Próbuje wykryć czy kontroler wysyła zdarzenia myszy czy klawiatury
+    return 'mouse'; // Domyślnie dla S18
+  }
+  
+  async testButton(button: S18ButtonType): Promise<boolean> {
+    // Testowanie przycisku - czeka na naciśnięcie
+    // Używane w trybie konfiguracji
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => resolve(false), 5000);
+      
+      const handler = (action: PrompterAction) => {
+        if (this.config.buttonMapping[button] === action) {
+          clearTimeout(timeout);
+          resolve(true);
+        }
+      };
+      
+      this.onAction(handler);
+    });
+  }
+  
+  setConfig(config: S18ControllerConfig): void {
+    this.cleanup();
+    this.initialize(config);
+  }
+  
+  cleanup(): void {
+    // Cleanup event listeners
+    this.actionCallback = undefined;
+  }
+}
+
+export const s18ControllerService = new S18ControllerServiceImpl();
+```
+
+**Kluczowe Funkcje:**
+
+1. **Dual Mode Support** - obsługa trybu myszy i klawiatury
+2. **Auto-detection** - automatyczne wykrywanie trybu kontrolera
+3. **Button Testing** - tryb testowania przycisków dla konfiguracji
+4. **Debouncing** - zapobieganie wielokrotnym akcjom
+5. **Configurable Mapping** - elastyczne mapowanie przycisków
+
 #### exportImportService.ts
 
 ```typescript
@@ -636,6 +997,103 @@ export function useSongs() {
   }, []);
   
   return { songs, loading, saveSong, deleteSong, reload: loadSongs };
+}
+```
+
+#### useS18Controller
+
+**Nowy hook dla kontrolera S18:**
+
+```typescript
+interface UseS18ControllerReturn {
+  config: S18ControllerConfig;
+  isEnabled: boolean;
+  updateConfig: (config: Partial<S18ControllerConfig>) => Promise<void>;
+  testButton: (button: S18ButtonType) => Promise<boolean>;
+  detectMode: () => 'mouse' | 'keyboard' | 'unknown';
+  resetToDefaults: () => Promise<void>;
+}
+
+export function useS18Controller(): UseS18ControllerReturn {
+  const [config, setConfig] = useState<S18ControllerConfig>(getDefaultS18Config());
+  const [isEnabled, setIsEnabled] = useState(false);
+  
+  // Load config from storage on mount
+  useEffect(() => {
+    loadS18Config();
+  }, []);
+  
+  // Initialize service when config changes
+  useEffect(() => {
+    if (config.enabled) {
+      s18ControllerService.initialize(config);
+    } else {
+      s18ControllerService.cleanup();
+    }
+    return () => s18ControllerService.cleanup();
+  }, [config]);
+  
+  const loadS18Config = async () => {
+    try {
+      const saved = await storageService.loadS18Config();
+      if (saved) {
+        setConfig(saved);
+        setIsEnabled(saved.enabled);
+      }
+    } catch (error) {
+      console.error('Failed to load S18 config:', error);
+    }
+  };
+  
+  const updateConfig = async (partial: Partial<S18ControllerConfig>) => {
+    const newConfig = { ...config, ...partial };
+    setConfig(newConfig);
+    setIsEnabled(newConfig.enabled);
+    await storageService.saveS18Config(newConfig);
+  };
+  
+  const testButton = async (button: S18ButtonType): Promise<boolean> => {
+    return await s18ControllerService.testButton(button);
+  };
+  
+  const detectMode = (): 'mouse' | 'keyboard' | 'unknown' => {
+    return s18ControllerService.detectMode();
+  };
+  
+  const resetToDefaults = async () => {
+    const defaults = getDefaultS18Config();
+    await updateConfig(defaults);
+  };
+  
+  return {
+    config,
+    isEnabled,
+    updateConfig,
+    testButton,
+    detectMode,
+    resetToDefaults,
+  };
+}
+
+// Default configuration
+function getDefaultS18Config(): S18ControllerConfig {
+  return {
+    enabled: false,
+    mode: 'mouse',
+    buttonMapping: {
+      up: 'increaseSpeed',
+      down: 'decreaseSpeed',
+      left: 'prevSong',
+      right: 'nextSong',
+      touch: 'pause',
+    },
+    clickZones: {
+      left: { x: 0, width: 0.33 },
+      center: { x: 0.33, width: 0.34 },
+      right: { x: 0.67, width: 0.33 },
+    },
+    sensitivity: 1.0,
+  };
 }
 ```
 
@@ -910,6 +1368,60 @@ export function generateId(): string {
 
 **Validates: Requirements 13.1, 13.2**
 
+### Property 32: Wykrywanie kontrolera S18
+
+*Dla dowolnego* sparowanego kontrolera S18, system powinien wykryć kontroler jako urządzenie wejściowe i umożliwić jego konfigurację.
+
+**Validates: Requirements 14.1**
+
+### Property 33: Mapowanie przycisku prawo na następny utwór
+
+*Dla dowolnej* setlisty z co najmniej dwoma utworami, naciśnięcie przycisku kierunkowego w prawo na kontrolerze S18 powinno przejść do następnego utworu.
+
+**Validates: Requirements 14.2**
+
+### Property 34: Mapowanie przycisku lewo na poprzedni utwór
+
+*Dla dowolnej* setlisty z co najmniej dwoma utworami, naciśnięcie przycisku kierunkowego w lewo na kontrolerze S18 powinno przejść do poprzedniego utworu.
+
+**Validates: Requirements 14.3**
+
+### Property 35: Mapowanie przycisku Touch na pause/play
+
+*Dla dowolnego* stanu promptera (playing lub paused), naciśnięcie przycisku Touch na kontrolerze S18 powinno przełączyć stan odtwarzania.
+
+**Validates: Requirements 14.4**
+
+### Property 36: Zwiększanie prędkości przewijania
+
+*Dla dowolnej* prędkości przewijania V (gdzie V < 2.0), naciśnięcie przycisku kierunkowego w górę powinno zwiększyć prędkość do V * 1.1 (z maksimum 2.0).
+
+**Validates: Requirements 14.5**
+
+### Property 37: Zmniejszanie prędkości przewijania
+
+*Dla dowolnej* prędkości przewijania V (gdzie V > 0.5), naciśnięcie przycisku kierunkowego w dół powinno zmniejszyć prędkość do V * 0.9 (z minimum 0.5).
+
+**Validates: Requirements 14.6**
+
+### Property 38: Round-trip persystencji konfiguracji S18
+
+*Dla dowolnej* konfiguracji S18ControllerConfig, zapisanie jej do storage a następnie załadowanie powinno zwrócić równoważną konfigurację.
+
+**Validates: Requirements 14.9**
+
+### Property 39: Wykrywanie kliknięć w strefach ekranu
+
+*Dla dowolnego* kliknięcia myszy w zdefiniowanej strefie ekranu (lewo/środek/prawo), system powinien wykonać odpowiednią akcję przypisaną do tej strefy.
+
+**Validates: Requirements 14.10**
+
+### Property 40: Testowanie przycisków kontrolera
+
+*Dla dowolnego* przycisku S18 w trybie testowania, naciśnięcie tego przycisku powinno wywołać wizualny feedback i wyświetlić wykrytą akcję.
+
+**Validates: Requirements 14.8**
+
 ## Obsługa Błędów
 
 ### Strategie Obsługi Błędów
@@ -974,6 +1486,53 @@ try {
     [{ text: 'OK' }]
   );
   // Preserve existing data
+}
+```
+
+#### 5. S18 Controller Errors
+
+```typescript
+try {
+  s18ControllerService.initialize(config);
+} catch (error) {
+  console.warn('S18 Controller initialization failed:', error);
+  // Gracefully degrade - app works with touch controls
+  // Show optional notification to user
+  if (config.enabled) {
+    Alert.alert(
+      'Kontroler S18',
+      'Nie udało się zainicjalizować kontrolera S18. Aplikacja będzie działać z kontrolami dotykowymi.',
+      [{ text: 'OK' }]
+    );
+  }
+}
+
+// Button detection timeout
+try {
+  const detected = await s18ControllerService.testButton('right');
+  if (!detected) {
+    Alert.alert(
+      'Test przycisku',
+      'Nie wykryto naciśnięcia przycisku. Sprawdź czy kontroler jest sparowany i włączony.',
+      [{ text: 'OK' }]
+    );
+  }
+} catch (error) {
+  console.error('Button test failed:', error);
+  // Show error to user
+}
+
+// Invalid configuration
+try {
+  validateS18Config(config);
+} catch (error) {
+  Alert.alert(
+    'Niepoprawna konfiguracja',
+    'Konfiguracja kontrolera S18 jest niepoprawna. Przywrócono domyślne ustawienia.',
+    [{ text: 'OK' }]
+  );
+  // Reset to defaults
+  config = getDefaultS18Config();
 }
 ```
 

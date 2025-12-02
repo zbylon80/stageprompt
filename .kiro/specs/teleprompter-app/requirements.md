@@ -17,8 +17,11 @@ Workflow zakłada, że użytkownik przygotowuje materiały na komputerze, ekspor
 - **Setlist**: Lista utworów w określonej kolejności do wykonania podczas występu
 - **AnchorY**: Punkt odniesienia na ekranie (np. 40% wysokości), przez który przechodzą linijki tekstu
 - **Kontroler Zewnętrzny**: Zewnętrzne urządzenie Bluetooth (pilot lub footswitch) działające jak klawiatura
+- **Kontroler S18**: Multifunction Bluetooth Remote Control z przyciskami kierunkowymi i przyciskami funkcyjnymi, działający jako mysz/touchpad lub klawiatura
 - **ScrollY**: Pozycja przewijania widoku w pikselach
 - **KeyCode**: Kod klawisza z urządzenia wejściowego
+- **Prędkość Przewijania**: Mnożnik prędkości odtwarzania promptera (0.5x - 2.0x), domyślnie 1.0x
+- **Obszar Kliknięcia**: Zdefiniowany region ekranu reagujący na kliknięcia myszy z kontrolera S18
 - **System**: Aplikacja StagePrompt
 
 ## Requirements
@@ -182,3 +185,20 @@ Workflow zakłada, że użytkownik przygotowuje materiały na komputerze, ekspor
 3. WHEN użytkownik kończy pracę na komputerze THEN System SHALL umożliwić eksport danych do pliku
 4. WHEN użytkownik importuje dane na urządzeniu mobilnym THEN System SHALL zachować wszystkie utwory, setlisty i timings
 5. WHEN aplikacja działa na różnych platformach THEN System SHALL zachować pełną kompatybilność danych i funkcjonalności
+
+### Wymaganie 14
+
+**User Story:** Jako performer, chcę używać kontrolera Bluetooth S18 z dedykowanym mapowaniem przycisków, aby wygodnie sterować prompterem podczas występu bez dotykania ekranu.
+
+#### Kryteria Akceptacji
+
+1. WHEN użytkownik sparuje kontroler S18 przez Bluetooth THEN System SHALL wykryć kontroler jako urządzenie wejściowe
+2. WHEN użytkownik naciśnie przycisk kierunkowy w prawo na kontrolerze S18 THEN System SHALL przejść do następnego utworu w setliście
+3. WHEN użytkownik naciśnie przycisk kierunkowy w lewo na kontrolerze S18 THEN System SHALL przejść do poprzedniego utworu w setliście
+4. WHEN użytkownik naciśnie przycisk Touch na kontrolerze S18 THEN System SHALL wstrzymać lub wznowić odtwarzanie
+5. WHEN użytkownik naciśnie przycisk kierunkowy w górę na kontrolerze S18 THEN System SHALL zwiększyć prędkość przewijania o 10 procent
+6. WHEN użytkownik naciśnie przycisk kierunkowy w dół na kontrolerze S18 THEN System SHALL zmniejszyć prędkość przewijania o 10 procent
+7. WHEN użytkownik wchodzi w tryb konfiguracji kontrolera S18 THEN System SHALL wyświetlić interfejs do testowania i mapowania przycisków
+8. WHEN użytkownik testuje przyciski kontrolera S18 w trybie konfiguracji THEN System SHALL wyświetlić wizualny feedback dla każdego naciśniętego przycisku
+9. WHEN użytkownik zapisuje konfigurację kontrolera S18 THEN System SHALL zapisać mapowanie przycisków do storage
+10. WHEN kontroler S18 działa w trybie myszy THEN System SHALL wykrywać kliknięcia w zdefiniowanych obszarach ekranu jako akcje kontrolera

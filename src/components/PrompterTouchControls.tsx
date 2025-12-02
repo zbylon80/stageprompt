@@ -7,9 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Text,
-  GestureResponderEvent,
 } from 'react-native';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 interface PrompterTouchControlsProps {
@@ -46,16 +44,19 @@ export function PrompterTouchControls({
   };
 
   const handleLeftPress = () => {
+    console.log('Touch control action: previousSong');
     showFeedback('left');
     onPrevious();
   };
 
   const handleCenterPress = () => {
+    console.log('Touch control action: playPause');
     showFeedback('center');
     onPlayPause();
   };
 
   const handleRightPress = () => {
+    console.log('Touch control action: nextSong');
     showFeedback('right');
     onNext();
   };
@@ -73,37 +74,15 @@ export function PrompterTouchControls({
     opacity: rightOpacity.value,
   }));
 
-  // Swipe gesture detection
-  const panGesture = Gesture.Pan()
-    .onEnd((event) => {
-      const { translationX, translationY } = event;
-      
-      // Require minimum swipe distance
-      const minSwipeDistance = 50;
-      
-      // Horizontal swipes (ignore if too much vertical movement)
-      if (Math.abs(translationX) > minSwipeDistance && Math.abs(translationY) < 100) {
-        if (translationX > 0) {
-          // Swipe right → Next
-          handleRightPress();
-        } else {
-          // Swipe left → Previous
-          handleLeftPress();
-        }
-      }
-      // Tap (minimal movement)
-      else if (Math.abs(translationX) < 20 && Math.abs(translationY) < 20) {
-        handleCenterPress();
-      }
-    });
-
   return (
-    <GestureDetector gesture={panGesture}>
-      <View style={styles.container}>
+    <View style={styles.container}>
         {/* Left area - Previous */}
         <TouchableOpacity
           style={styles.touchArea}
-          onPress={handleLeftPress}
+          onPress={() => {
+            console.log('LEFT AREA PRESSED');
+            handleLeftPress();
+          }}
           activeOpacity={1}
         >
           <Animated.View style={[styles.feedback, leftAnimatedStyle, { backgroundColor: textColor }]} />
@@ -133,7 +112,10 @@ export function PrompterTouchControls({
         {/* Right area - Next */}
         <TouchableOpacity
           style={styles.touchArea}
-          onPress={handleRightPress}
+          onPress={() => {
+            console.log('RIGHT AREA PRESSED');
+            handleRightPress();
+          }}
           activeOpacity={1}
         >
           <Animated.View style={[styles.feedback, rightAnimatedStyle, { backgroundColor: textColor }]} />
@@ -145,7 +127,6 @@ export function PrompterTouchControls({
           )}
         </TouchableOpacity>
       </View>
-    </GestureDetector>
   );
 }
 
@@ -157,7 +138,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     flexDirection: 'row',
-    pointerEvents: 'box-none', // Allow touches to pass through to children
+    pointerEvents: 'auto', // Capture all pointer events including mouse clicks
   },
   touchArea: {
     flex: 1,

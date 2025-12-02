@@ -794,3 +794,194 @@
   - Troubleshooting guide
   - Lista kompatybilnych kontrolerów Bluetooth
   - Instrukcje transferu danych między urządzeniami
+
+
+- [ ] 36. Implementacja obsługi kontrolera S18
+
+  - Rozszerzenie types/models.ts o typy S18 (S18ButtonType, S18ButtonMapping, S18ControllerConfig)
+  - Rozszerzenie PrompterAction o nowe akcje (increaseSpeed, decreaseSpeed, resetSpeed)
+  - Rozszerzenie AppSettings o scrollSpeedMultiplier i showTouchHints
+  - _Requirements: 14.1, 14.5, 14.6_
+
+- [ ] 36.1 Implementacja serwisu kontrolera S18
+
+  - Utworzenie services/s18ControllerService.ts
+  - Implementacja wykrywania trybu kontrolera (mouse/keyboard/auto)
+  - Implementacja obsługi trybu myszy (kliknięcia w strefy ekranu)
+  - Implementacja obsługi trybu klawiatury (mapowanie keyCode na akcje)
+  - Implementacja debouncing (300ms)
+  - Implementacja testowania przycisków
+  - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.8, 14.10_
+
+- [ ] 36.2 Napisanie testów property dla wykrywania kontrolera
+
+  - **Property 32: Wykrywanie kontrolera S18**
+  - **Validates: Requirements 14.1**
+
+- [ ] 36.3 Napisanie testów property dla mapowania przycisków
+
+  - **Property 33: Mapowanie przycisku prawo na następny utwór**
+  - **Property 34: Mapowanie przycisku lewo na poprzedni utwór**
+  - **Property 35: Mapowanie przycisku Touch na pause/play**
+  - **Validates: Requirements 14.2, 14.3, 14.4**
+
+- [ ] 36.4 Napisanie testów property dla prędkości przewijania
+
+  - **Property 36: Zwiększanie prędkości przewijania**
+  - **Property 37: Zmniejszanie prędkości przewijania**
+  - **Validates: Requirements 14.5, 14.6**
+
+- [ ] 37. Implementacja hooka useS18Controller
+
+  - Utworzenie hooks/useS18Controller.ts
+  - Implementacja ładowania konfiguracji z storage
+  - Implementacja aktualizacji konfiguracji
+  - Implementacja testowania przycisków
+  - Implementacja wykrywania trybu
+  - Implementacja resetowania do domyślnych ustawień
+  - _Requirements: 14.7, 14.8, 14.9_
+
+- [ ] 37.1 Napisanie testów property dla persystencji konfiguracji S18
+
+  - **Property 38: Round-trip persystencji konfiguracji S18**
+  - **Validates: Requirements 14.9**
+
+- [ ] 38. Rozszerzenie storageService o S18
+
+  - Dodanie metod saveS18Config i loadS18Config
+  - Dodanie klucza @s18_config do AsyncStorage
+  - Obsługa błędów storage dla konfiguracji S18
+  - _Requirements: 14.9_
+
+- [ ] 39. Implementacja komponentów UI dla S18
+
+  - Utworzenie components/S18ConfigurationPanel.tsx
+  - Implementacja mode selector (Mouse/Keyboard/Auto-detect)
+  - Implementacja button mapping editor
+  - Implementacja sensitivity slider
+  - Implementacja przycisków Save/Cancel/Reset Defaults
+  - _Requirements: 14.7, 14.9_
+
+- [ ] 39.1 Implementacja komponentu S18ButtonTester
+
+  - Utworzenie components/S18ButtonTester.tsx
+  - Wizualizacja układu przycisków S18 (góra, dół, lewo, prawo, touch)
+  - Real-time highlighting przy naciśnięciu
+  - Wyświetlanie wykrytej akcji
+  - Timeout po 5 sekundach
+  - _Requirements: 14.8_
+
+- [ ] 39.2 Napisanie testów property dla testowania przycisków
+
+  - **Property 40: Testowanie przycisków kontrolera**
+  - **Validates: Requirements 14.8**
+
+- [ ] 39.3 Implementacja komponentu S18ClickZonesPreview
+
+  - Utworzenie components/S18ClickZonesPreview.tsx
+  - Wizualizacja 3 stref ekranu (lewo, środek, prawo)
+  - Interaktywne dostosowanie szerokości stref
+  - Ikony akcji w każdej strefie
+  - Preview w skali ekranu promptera
+  - _Requirements: 14.10_
+
+- [ ] 39.4 Napisanie testów property dla wykrywania kliknięć w strefach
+
+  - **Property 39: Wykrywanie kliknięć w strefach ekranu**
+  - **Validates: Requirements 14.10**
+
+- [ ] 40. Integracja S18 z SettingsScreen
+
+  - Dodanie sekcji "S18 Controller" w SettingsScreen
+  - Integracja S18ConfigurationPanel
+  - Toggle "Enable S18 Controller"
+  - Przycisk "Configure S18"
+  - Wyświetlanie aktualnego trybu i statusu
+  - _Requirements: 14.7, 14.9_
+
+- [ ] 41. Integracja S18 z PrompterScreen
+
+  - Rozszerzenie PrompterScreen o obsługę scrollSpeedMultiplier
+  - Implementacja handleS18Action dla wszystkich akcji
+  - Implementacja adjustSpeed (±10% z limitami 0.5-2.0)
+  - Integracja z s18ControllerService.onAction
+  - Wyświetlanie aktualnej prędkości (opcjonalnie)
+  - _Requirements: 14.2, 14.3, 14.4, 14.5, 14.6_
+
+- [ ] 41.1 Aktualizacja algorytmu przewijania dla prędkości
+
+  - Modyfikacja scrollAlgorithm.ts aby uwzględniać scrollSpeedMultiplier
+  - Modyfikacja timer loop w PrompterScreen (currentTime * speedMultiplier)
+  - Testowanie płynności przewijania z różnymi prędkościami
+  - _Requirements: 14.5, 14.6_
+
+- [ ]* 41.2 Napisanie testów jednostkowych dla prędkości przewijania
+
+  - Test zwiększania prędkości (1.0 → 1.1)
+  - Test zmniejszania prędkości (1.0 → 0.9)
+  - Test limitów (min 0.5, max 2.0)
+  - Test resetowania prędkości
+  - _Requirements: 14.5, 14.6_
+
+- [ ] 42. Implementacja utils/s18Detection.ts
+
+  - Funkcja detectS18Controller() - wykrywanie sparowanego S18
+  - Funkcja detectControllerMode() - wykrywanie trybu (mouse/keyboard)
+  - Funkcja isS18Compatible() - sprawdzanie kompatybilności platformy
+  - Obsługa błędów wykrywania
+  - _Requirements: 14.1_
+
+- [ ] 43. Aktualizacja PrompterTouchControls dla S18
+
+  - Integracja z S18ClickZonesPreview (te same strefy)
+  - Obsługa kliknięć myszy z kontrolera S18
+  - Opcjonalne wyświetlanie podpowiedzi (showTouchHints)
+  - Testowanie z fizycznym kontrolerem S18
+  - _Requirements: 14.10_
+
+- [ ] 44. Dokumentacja kontrolera S18
+
+  - Utworzenie docs/S18-CONTROLLER-GUIDE.md
+  - Instrukcje parowania kontrolera S18
+  - Instrukcje konfiguracji (tryb myszy vs klawiatura)
+  - Instrukcje mapowania przycisków
+  - Instrukcje testowania przycisków
+  - Troubleshooting dla S18
+  - Przykładowe konfiguracje
+  - _Requirements: 14.1-14.10_
+
+- [ ] 45. Testowanie kontrolera S18
+
+  - Testowanie z fizycznym kontrolerem S18 na Android
+  - Testowanie trybu myszy (kliknięcia w strefy)
+  - Testowanie trybu klawiatury (jeśli dostępny)
+  - Testowanie wszystkich akcji (next, prev, pause, speed up/down)
+  - Testowanie persystencji konfiguracji
+  - Testowanie graceful degradation (brak kontrolera)
+  - _Requirements: 14.1-14.10_
+
+- [ ]* 45.1 Napisanie test case'ów E2E dla S18 (MCP Playwright)
+
+  - Utworzenie e2e/test-cases/TC-020-s18-configuration.md
+  - Test case: Konfiguracja kontrolera S18
+  - Test case: Testowanie przycisków S18
+  - Test case: Zmiana prędkości przewijania
+  - Test case: Nawigacja między utworami z S18
+  - **Validates: Requirements 14.1-14.10**
+
+- [ ] 46. Checkpoint - Kontroler S18
+
+  - Weryfikacja wszystkich funkcji S18
+  - Weryfikacja testów property (Property 32-40)
+  - Testowanie z fizycznym kontrolerem
+  - Testowanie na różnych urządzeniach Android
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 47. Finalna integracja i optymalizacja S18
+
+  - Optymalizacja wydajności wykrywania kliknięć
+  - Optymalizacja debouncing dla lepszej responsywności
+  - Dodanie animacji przy zmianie prędkości
+  - Dodanie wizualnego feedbacku dla akcji S18
+  - Testowanie UX z kontrolerem S18
+  - _Requirements: 14.1-14.10_

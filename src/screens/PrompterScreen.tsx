@@ -194,6 +194,48 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
     };
   }, [keyMapping, handlePlayPause, handleNextSong, handlePreviousSong]); // Re-initialize when key mapping or handlers change
 
+  // Direct keyboard listener for S18 controller (Android only)
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    try {
+      const KeyEvent = require('react-native-keyevent');
+      
+      const keyDownListener = (keyEvent: any) => {
+        console.log('🎮 Key pressed:', keyEvent.keyCode, keyEvent);
+        
+        // Common keycodes for Bluetooth controllers:
+        // 22 = DPAD_RIGHT, 21 = DPAD_LEFT, 62 = SPACE, 66 = ENTER
+        // 19 = DPAD_UP, 20 = DPAD_DOWN
+        
+        switch (keyEvent.keyCode) {
+          case 22: // DPAD_RIGHT or Right Arrow
+          case 66: // ENTER
+            console.log('🎮 Next song triggered by controller');
+            handleNextSong();
+            break;
+          case 21: // DPAD_LEFT or Left Arrow
+            console.log('🎮 Previous song triggered by controller');
+            handlePreviousSong();
+            break;
+          case 62: // SPACE
+          case 85: // MEDIA_PLAY_PAUSE
+            console.log('🎮 Play/Pause triggered by controller');
+            handlePlayPause();
+            break;
+        }
+      };
+
+      KeyEvent.onKeyDownListener(keyDownListener);
+
+      return () => {
+        KeyEvent.removeKeyDownListener();
+      };
+    } catch (error) {
+      console.log('KeyEvent not available:', error);
+    }
+  }, [handleNextSong, handlePreviousSong, handlePlayPause]);
+
   const hasPrevious = currentIndex > 0;
   const hasNext = currentIndex >= 0 && currentIndex < setlistSongIds.length - 1;
 
@@ -356,14 +398,14 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
         })}
       />
 
-      {/* Touch and click controls - DISABLED, using key mapping instead */}
-      {/* <PrompterTouchControls
+      {/* Touch and click controls for Bluetooth mouse controllers (like S18) and finger gestures */}
+      <PrompterTouchControls
         onPrevious={handlePreviousSong}
         onNext={handleNextSong}
         onPlayPause={handlePlayPause}
         showHints={showTouchHints}
         textColor={textColor}
-      /> */}
+      />
     </SafeAreaView>
   );
 }
