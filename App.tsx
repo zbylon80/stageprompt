@@ -2,8 +2,9 @@ import 'react-native-gesture-handler';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
+import { Text, Platform, TouchableOpacity } from 'react-native';
 import { SongListScreen } from './src/screens/SongListScreen';
 import { SongEditorScreen } from './src/screens/SongEditorScreen';
 import { SetlistListScreen } from './src/screens/SetlistListScreen';
@@ -34,10 +35,11 @@ const SettingsButton = ({ navigation }: { navigation: any }) => (
 
 export default function App() {
   return (
-    <ErrorBoundary>
-      <DataProvider>
-        <SettingsProvider>
-          <NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ErrorBoundary>
+        <DataProvider>
+          <SettingsProvider>
+            <NavigationContainer>
             <StatusBar style="light" />
             <Stack.Navigator
               screenOptions={{
@@ -100,18 +102,8 @@ export default function App() {
         </SettingsProvider>
       </DataProvider>
     </ErrorBoundary>
+    </GestureHandlerRootView>
   );
 }
 
-const styles = StyleSheet.create({
-  placeholder: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderText: {
-    fontSize: 18,
-    color: '#ffffff',
-  },
-});
+

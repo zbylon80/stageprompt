@@ -770,7 +770,12 @@
   - Opcja załadowania sample data przy pierwszym uruchomieniu
   - _Requirements: 1.5_
 
-- [ ] 34. Finalne testowanie i debugging
+- [x] 34. Finalne testowanie i debugging
+
+
+
+
+
   - Przejście przez wszystkie user stories
   - Weryfikacja wszystkich acceptance criteria przez test case'y E2E
   - Testowanie na fizycznym urządzeniu Android

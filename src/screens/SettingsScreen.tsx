@@ -18,6 +18,7 @@ import Slider from '@react-native-community/slider';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Toast } from '../components/Toast';
 import { KeyMappingDialog } from '../components/KeyMappingDialog';
+import { KeyMappingDialogSimple } from '../components/KeyMappingDialogSimple';
 import { exportImportService } from '../services/exportImportService';
 import { storageService } from '../services/storageService';
 import { setupDragDrop } from '../utils/dragDropFile';
@@ -636,21 +637,39 @@ export function SettingsScreen() {
 
       {/* Key Mapping Dialog */}
       {keyMapping && (
-        <KeyMappingDialog
-          visible={showKeyMappingDialog}
-          keyMapping={keyMapping}
-          onSave={async (mapping) => {
-            setShowKeyMappingDialog(false);
-            try {
-              await saveKeyMapping(mapping);
-              showToast('Key mapping saved successfully', 'success');
-            } catch (err) {
-              console.error('Failed to save key mapping:', err);
-              showToast('Failed to save key mapping', 'error');
-            }
-          }}
-          onCancel={() => setShowKeyMappingDialog(false)}
-        />
+        Platform.OS === 'web' ? (
+          <KeyMappingDialog
+            visible={showKeyMappingDialog}
+            keyMapping={keyMapping}
+            onSave={async (mapping) => {
+              setShowKeyMappingDialog(false);
+              try {
+                await saveKeyMapping(mapping);
+                showToast('Key mapping saved successfully', 'success');
+              } catch (err) {
+                console.error('Failed to save key mapping:', err);
+                showToast('Failed to save key mapping', 'error');
+              }
+            }}
+            onCancel={() => setShowKeyMappingDialog(false)}
+          />
+        ) : (
+          <KeyMappingDialogSimple
+            visible={showKeyMappingDialog}
+            keyMapping={keyMapping}
+            onSave={async (mapping) => {
+              setShowKeyMappingDialog(false);
+              try {
+                await saveKeyMapping(mapping);
+                showToast('Key mapping saved successfully', 'success');
+              } catch (err) {
+                console.error('Failed to save key mapping:', err);
+                showToast('Failed to save key mapping', 'error');
+              }
+            }}
+            onCancel={() => setShowKeyMappingDialog(false)}
+          />
+        )
       )}
 
       {/* Import Mode Dialog */}

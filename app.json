@@ -30,8 +30,24 @@
       ],
       "softwareKeyboardLayoutMode": "resize"
     },
+    "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": false,
+            "enableMinifyInReleaseBuilds": false
+          }
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ee13a048-9125-4c68-b1a1-d206bd53a0dc"
+      }
     }
   }
 }

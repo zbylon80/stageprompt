@@ -22,6 +22,7 @@ import { useSettings } from '../hooks/useSettings';
 import { useKeyMapping } from '../hooks/useKeyMapping';
 import { SectionMarker } from '../components/SectionMarker';
 import { PrompterControls } from '../components/PrompterControls';
+import { PrompterTouchControls } from '../components/PrompterTouchControls';
 import { usePrompterTimer } from '../hooks/usePrompterTimer';
 import { calculateScrollY } from '../services/scrollAlgorithm';
 import { keyEventService } from '../services/keyEventService';
@@ -102,6 +103,7 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
   const marginHorizontal = settings?.marginHorizontal ?? 40;
   const lineHeight = settings?.lineHeight ?? 60;
   const anchorYPercent = settings?.anchorYPercent ?? 0.4;
+  const showTouchHints = settings?.showTouchHints ?? true;
   
   // Calculate anchorY in pixels (based on screen height)
   const [screenHeight, setScreenHeight] = useState(0);
@@ -353,6 +355,15 @@ export function PrompterScreen({ route, navigation }: PrompterScreenProps) {
           index,
         })}
       />
+
+      {/* Touch and click controls - DISABLED, using key mapping instead */}
+      {/* <PrompterTouchControls
+        onPrevious={handlePreviousSong}
+        onNext={handleNextSong}
+        onPlayPause={handlePlayPause}
+        showHints={showTouchHints}
+        textColor={textColor}
+      /> */}
     </SafeAreaView>
   );
 }

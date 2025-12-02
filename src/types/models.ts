@@ -42,6 +42,7 @@ export interface AppSettings {
   backgroundColor: string;    // hex color
   marginHorizontal: number;   // pixels
   lineHeight: number;         // pixels (default 60)
+  showTouchHints?: boolean;   // Show touch control hints (default true)
 }
 
 export interface KeyMapping {
