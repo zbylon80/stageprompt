@@ -743,7 +743,12 @@
   - **Property 31: Pełna funkcjonalność edycji na komputerze**
   - **Validates: Requirements 12.1, 12.2**
 
-- [ ] 32. Testowanie cross-platform workflow
+- [x] 32. Testowanie cross-platform workflow
+
+
+
+
+
   - Testowanie pełnego workflow: edycja na web → eksport → import na mobile
   - Testowanie na Expo Go (Android)
   - Testowanie w przeglądarce (web mode)
