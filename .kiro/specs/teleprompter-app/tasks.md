@@ -801,14 +801,21 @@
   - Instrukcje transferu danych między urządzeniami
 
 
-- [ ] 36. Implementacja obsługi kontrolera S18
+- [x] 36. Implementacja obsługi kontrolera S18
+
+
+
+
+
 
   - Rozszerzenie types/models.ts o typy S18 (S18ButtonType, S18ButtonMapping, S18ControllerConfig)
   - Rozszerzenie PrompterAction o nowe akcje (increaseSpeed, decreaseSpeed, resetSpeed)
   - Rozszerzenie AppSettings o scrollSpeedMultiplier i showTouchHints
   - _Requirements: 14.1, 14.5, 14.6_
 
-- [ ] 36.1 Implementacja serwisu kontrolera S18
+- [x] 36.1 Implementacja serwisu kontrolera S18
+
+
 
   - Utworzenie services/s18ControllerService.ts
   - Implementacja wykrywania trybu kontrolera (mouse/keyboard/auto)
@@ -818,19 +825,25 @@
   - Implementacja testowania przycisków
   - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.8, 14.10_
 
-- [ ] 36.2 Napisanie testów property dla wykrywania kontrolera
+- [x] 36.2 Napisanie testów property dla wykrywania kontrolera
+
+
 
   - **Property 32: Wykrywanie kontrolera S18**
   - **Validates: Requirements 14.1**
 
-- [ ] 36.3 Napisanie testów property dla mapowania przycisków
+
+- [x] 36.3 Napisanie testów property dla mapowania przycisków
+
 
   - **Property 33: Mapowanie przycisku prawo na następny utwór**
   - **Property 34: Mapowanie przycisku lewo na poprzedni utwór**
   - **Property 35: Mapowanie przycisku Touch na pause/play**
   - **Validates: Requirements 14.2, 14.3, 14.4**
 
-- [ ] 36.4 Napisanie testów property dla prędkości przewijania
+- [x] 36.4 Napisanie testów property dla prędkości przewijania
+
+
 
   - **Property 36: Zwiększanie prędkości przewijania**
   - **Property 37: Zmniejszanie prędkości przewijania**

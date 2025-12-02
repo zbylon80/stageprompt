@@ -42,6 +42,7 @@ export interface AppSettings {
   backgroundColor: string;    // hex color
   marginHorizontal: number;   // pixels
   lineHeight: number;         // pixels (default 60)
+  scrollSpeedMultiplier: number; // 0.5-2.0 (default 1.0)
   showTouchHints?: boolean;   // Show touch control hints (default true)
 }
 
@@ -51,4 +52,34 @@ export interface KeyMapping {
   pause?: number;       // keyCode
 }
 
-export type PrompterAction = 'nextSong' | 'prevSong' | 'pause';
+export type PrompterAction = 
+  | 'nextSong' 
+  | 'prevSong' 
+  | 'pause' 
+  | 'increaseSpeed' 
+  | 'decreaseSpeed'
+  | 'resetSpeed';
+
+// S18 Controller specific types
+export type S18ButtonType = 'up' | 'down' | 'left' | 'right' | 'touch' | 'auxiliary';
+
+export interface S18ButtonMapping {
+  up: PrompterAction;         // Default: 'increaseSpeed'
+  down: PrompterAction;       // Default: 'decreaseSpeed'
+  left: PrompterAction;       // Default: 'prevSong'
+  right: PrompterAction;      // Default: 'nextSong'
+  touch: PrompterAction;      // Default: 'pause'
+  auxiliary?: PrompterAction; // Optional: custom action
+}
+
+export interface S18ControllerConfig {
+  enabled: boolean;
+  mode: 'mouse' | 'keyboard';  // Detection mode
+  buttonMapping: S18ButtonMapping;
+  clickZones: {
+    left: { x: number; width: number };    // Left zone for prev
+    center: { x: number; width: number };  // Center zone for pause
+    right: { x: number; width: number };   // Right zone for next
+  };
+  sensitivity: number;  // 0.5-2.0 for speed adjustments
+}
