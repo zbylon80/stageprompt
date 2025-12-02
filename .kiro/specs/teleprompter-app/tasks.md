@@ -758,7 +758,12 @@
   - Testowanie transferu danych między platformami
   - _Requirements: 10.1, 10.2, 10.3, 10.4, 12.1, 12.2, 12.3, 12.4, 12.5_
 
-- [ ] 33. Dodanie przykładowych danych (opcjonalne)
+- [x] 33. Dodanie przykładowych danych (opcjonalne)
+
+
+
+
+
   - Utworzenie utils/sampleData.ts
   - Generowanie przykładowych utworów z timingami
   - Generowanie przykładowej setlisty

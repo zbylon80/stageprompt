@@ -1,6 +1,6 @@
 // screens/SetlistListScreen.tsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,8 +15,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSetlists } from '../hooks/useSetlists';
+import { useSongs } from '../hooks/useSongs';
 import { RootStackParamList } from '../types/navigation';
 import { Setlist } from '../types/models';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { Toast } from '../components/Toast';
+import { getSampleData, isFirstRun } from '../utils/sampleData';
+import { storageService } from '../services/storageService';
+import { isWeb } from '../utils/platform';
 
 type SetlistListScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
@@ -26,6 +32,28 @@ interface SetlistListScreenProps {
 
 export function SetlistListScreen({ navigation }: SetlistListScreenProps) {
   const { setlists, loading, error, reload } = useSetlists();
+  const { songs, saveSong } = useSongs();
+  const [showSampleDataDialog, setShowSampleDataDialog] = useState(false);
+  const [loadingSampleData, setLoadingSampleData] = useState(false);
+  const [toastVisible, setToastVisible] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+
+  // Check for first run and offer sample data
+  useEffect(() => {
+    const checkFirstRun = async () => {
+      try {
+        const firstRun = await isFirstRun(storageService.loadSongs.bind(storageService));
+        if (firstRun) {
+          setShowSampleDataDialog(true);
+        }
+      } catch (error) {
+        console.error('Error checking first run:', error);
+      }
+    };
+
+    checkFirstRun();
+  }, []);
 
   // Reload setlists when screen comes into focus
   useFocusEffect(
@@ -44,6 +72,41 @@ export function SetlistListScreen({ navigation }: SetlistListScreenProps) {
 
   const handleBrowseSongs = () => {
     navigation.navigate('SongList');
+  };
+
+  const handleLoadSampleData = async () => {
+    setShowSampleDataDialog(false);
+    setLoadingSampleData(true);
+
+    try {
+      const { songs: sampleSongs, setlist: sampleSetlist } = getSampleData();
+
+      // Save all sample songs
+      for (const song of sampleSongs) {
+        await saveSong(song);
+      }
+
+      // Save sample setlist
+      await storageService.saveSetlist(sampleSetlist);
+
+      // Reload data
+      await reload();
+
+      setToastMessage('Sample data loaded successfully!');
+      setToastType('success');
+      setToastVisible(true);
+    } catch (error) {
+      console.error('Error loading sample data:', error);
+      setToastMessage('Failed to load sample data');
+      setToastType('error');
+      setToastVisible(true);
+    } finally {
+      setLoadingSampleData(false);
+    }
+  };
+
+  const handleSkipSampleData = () => {
+    setShowSampleDataDialog(false);
   };
 
   const renderEmptyState = () => (
@@ -90,7 +153,7 @@ export function SetlistListScreen({ navigation }: SetlistListScreenProps) {
 
   // Render list content
   const renderList = () => {
-    if (Platform.OS === 'web') {
+    if (isWeb) {
       return (
         <ScrollView 
           style={styles.flatList} 
@@ -117,7 +180,7 @@ export function SetlistListScreen({ navigation }: SetlistListScreenProps) {
         }
         ListEmptyComponent={renderEmptyState}
         // Performance optimizations
-        removeClippedSubviews={Platform.OS !== 'web'}
+        removeClippedSubviews={!isWeb}
         maxToRenderPerBatch={10}
         windowSize={10}
         initialNumToRender={15}
@@ -151,6 +214,33 @@ export function SetlistListScreen({ navigation }: SetlistListScreenProps) {
           <Text style={styles.fabSongsText}>♪</Text>
         </TouchableOpacity>
       </SafeAreaView>
+
+      {/* Sample data dialog */}
+      <ConfirmDialog
+        visible={showSampleDataDialog}
+        title="Welcome to StagePrompt!"
+        message="Would you like to load some sample songs to get started? This will help you understand how the app works."
+        confirmText="Load Sample Data"
+        cancelText="Start Empty"
+        onConfirm={handleLoadSampleData}
+        onCancel={handleSkipSampleData}
+      />
+
+      {/* Loading overlay for sample data */}
+      {loadingSampleData && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#9b59b6" />
+          <Text style={styles.loadingOverlayText}>Loading sample data...</Text>
+        </View>
+      )}
+
+      {/* Toast for feedback */}
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type={toastType}
+        onHide={() => setToastVisible(false)}
+      />
     </View>
   );
 }
@@ -287,5 +377,21 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontWeight: '300',
     lineHeight: 32,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+  },
+  loadingOverlayText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#ffffff',
   },
 });
