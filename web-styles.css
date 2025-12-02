@@ -44,3 +44,39 @@
   background: #2a2a2a !important;
   visibility: visible !important;
 }
+
+/* Drag and drop styles */
+.drag-over {
+  border-color: #6bb6ff !important;
+  border-style: solid !important;
+  background-color: rgba(74, 158, 255, 0.1) !important;
+  transform: scale(1.02);
+  transition: all 0.3s ease;
+}
+
+/* Prevent text selection during drag */
+.dragging {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Cursor styles for interactive elements on web */
+@media (pointer: fine) {
+  button, [role="button"], a {
+    cursor: pointer;
+  }
+  
+  input, textarea, select {
+    cursor: text;
+  }
+  
+  [draggable="true"] {
+    cursor: grab;
+  }
+  
+  [draggable="true"]:active {
+    cursor: grabbing;
+  }
+}

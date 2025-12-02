@@ -724,7 +724,12 @@
   - Throttling dla scroll calculations
   - _Requirements: 4.3_
 
-- [ ] 31. Optymalizacja UI dla różnych platform
+- [x] 31. Optymalizacja UI dla różnych platform
+
+
+
+
+
   - Implementacja responsywnych layoutów (szersze na desktop)
   - Dodanie skrótów klawiszowych dla edycji na web/desktop
   - Optymalizacja touch targets dla mobile
@@ -732,7 +737,9 @@
   - Testowanie orientacji pionowej i poziomej na mobile
   - _Requirements: 12.1, 12.2_
 
-- [ ] 31.1 Napisanie testów property dla funkcjonalności edycji cross-platform
+- [x] 31.1 Napisanie testów property dla funkcjonalności edycji cross-platform
+
+
   - **Property 31: Pełna funkcjonalność edycji na komputerze**
   - **Validates: Requirements 12.1, 12.2**
 

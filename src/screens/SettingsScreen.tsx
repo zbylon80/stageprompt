@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -20,6 +20,8 @@ import { Toast } from '../components/Toast';
 import { KeyMappingDialog } from '../components/KeyMappingDialog';
 import { exportImportService } from '../services/exportImportService';
 import { storageService } from '../services/storageService';
+import { setupDragDrop } from '../utils/dragDropFile';
+import { registerShortcuts, COMMON_SHORTCUTS } from '../utils/keyboardShortcuts';
 
 export function SettingsScreen() {
   const { settings, loading, error, saveSettings } = useSettings();
@@ -40,6 +42,10 @@ export function SettingsScreen() {
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success');
+  const [isDragOver, setIsDragOver] = useState(false);
+  
+  // Refs for drag and drop
+  const dropZoneRef = useRef<View>(null);
 
   // Initialize local settings when settings load
   useEffect(() => {
@@ -47,6 +53,79 @@ export function SettingsScreen() {
       setLocalSettings(settings);
     }
   }, [settings]);
+
+  // Setup drag and drop for file import (web only)
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !dropZoneRef.current) return;
+
+    // Get the DOM element
+    const element = (dropZoneRef.current as any)._nativeTag
+      ? document.querySelector(`[data-tag="${(dropZoneRef.current as any)._nativeTag}"]`)
+      : dropZoneRef.current;
+
+    if (!element) return;
+
+    const cleanup = setupDragDrop(element as HTMLElement, {
+      onFileDrop: async (fileContent, fileName) => {
+        setIsDragOver(false);
+        
+        // Validate the data
+        if (!exportImportService.validateImportData(fileContent)) {
+          showToast('Invalid import file format', 'error');
+          return;
+        }
+
+        // Store the data and show mode selection dialog
+        setPendingImportData(fileContent);
+        setShowImportModeDialog(true);
+        showToast(`File "${fileName}" ready to import`, 'info');
+      },
+      onError: (error) => {
+        setIsDragOver(false);
+        showToast(error.message, 'error');
+      },
+      acceptedTypes: ['application/json', '.json'],
+    });
+
+    // Add visual feedback for drag over
+    const handleDragEnter = () => setIsDragOver(true);
+    const handleDragLeave = () => setIsDragOver(false);
+    
+    (element as HTMLElement).addEventListener('dragenter', handleDragEnter);
+    (element as HTMLElement).addEventListener('dragleave', handleDragLeave);
+
+    return () => {
+      cleanup();
+      (element as HTMLElement).removeEventListener('dragenter', handleDragEnter);
+      (element as HTMLElement).removeEventListener('dragleave', handleDragLeave);
+    };
+  }, []);
+
+  // Setup keyboard shortcuts (web only)
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+
+    const cleanup = registerShortcuts([
+      {
+        ...COMMON_SHORTCUTS.SAVE,
+        action: () => {
+          // Settings auto-save, so just show feedback
+          showToast('Settings are automatically saved', 'info');
+        },
+      },
+      {
+        ...COMMON_SHORTCUTS.ESCAPE,
+        action: () => {
+          // Close any open dialogs
+          if (showResetDialog) setShowResetDialog(false);
+          if (showKeyMappingDialog) setShowKeyMappingDialog(false);
+          if (showImportModeDialog) setShowImportModeDialog(false);
+        },
+      },
+    ]);
+
+    return cleanup;
+  }, [showResetDialog, showKeyMappingDialog, showImportModeDialog]);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToastMessage(message);
@@ -448,10 +527,18 @@ export function SettingsScreen() {
       </View>
 
       {/* Data Management Section */}
-      <View style={styles.section}>
+      <View 
+        ref={dropZoneRef}
+        style={[
+          styles.section,
+          Platform.OS === 'web' && styles.dropZone,
+          isDragOver && Platform.OS === 'web' && styles.dropZoneActive,
+        ]}
+      >
         <Text style={styles.sectionTitle}>Data Management</Text>
         <Text style={styles.description}>
           Export your songs and setlists to backup or transfer to another device
+          {Platform.OS === 'web' && '\n\n💡 Tip: You can also drag and drop a JSON file here to import'}
         </Text>
         
         <TouchableOpacity
@@ -481,6 +568,12 @@ export function SettingsScreen() {
         <Text style={styles.dataInfo}>
           Current data: {songs.length} songs, {setlists.length} setlists
         </Text>
+        
+        {isDragOver && Platform.OS === 'web' && (
+          <View style={styles.dragOverlay}>
+            <Text style={styles.dragOverlayText}>📁 Drop file to import</Text>
+          </View>
+        )}
       </View>
 
       {/* Reset to Defaults */}
@@ -775,4 +868,39 @@ const styles = StyleSheet.create({
     marginTop: 12,
     textAlign: 'center',
   },
+  dropZone: {
+    position: 'relative',
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: '#4a9eff',
+    borderRadius: 12,
+    padding: 20,
+    transition: 'all 0.3s ease',
+  } as any,
+  dropZoneActive: {
+    borderColor: '#6bb6ff',
+    borderStyle: 'solid',
+    backgroundColor: 'rgba(74, 158, 255, 0.1)',
+    transform: [{ scale: 1.02 }],
+  } as any,
+  dragOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(74, 158, 255, 0.2)',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    pointerEvents: 'none',
+  } as any,
+  dragOverlayText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  } as any,
 });
