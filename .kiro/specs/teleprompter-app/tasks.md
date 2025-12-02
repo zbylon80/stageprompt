@@ -784,7 +784,12 @@
   - Fix bugów i edge cases
   - _Requirements: All_
 
-- [ ] 35. Dokumentacja i README
+- [x] 35. Dokumentacja i README
+
+
+
+
+
   - Utworzenie README.md z instrukcjami instalacji
   - Dokumentacja workflow: praca na komputerze → eksport → import na tablet
   - Dokumentacja API dla głównych serwisów
