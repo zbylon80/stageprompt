@@ -1,7 +1,7 @@
 // services/storageService.ts
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Song, Setlist, AppSettings, KeyMapping } from '../types/models';
+import { Song, Setlist, AppSettings, KeyMapping, S18ControllerConfig } from '../types/models';
 import { validateImportData } from '../utils/validation';
 
 // Storage keys
@@ -10,6 +10,7 @@ const KEYS = {
   SETLISTS_INDEX: '@setlists_index',
   SETTINGS: '@settings',
   KEY_MAPPING: '@keyMapping',
+  S18_CONFIG: '@s18_config',
   SONG_PREFIX: '@songs:',
   SETLIST_PREFIX: '@setlists:',
 };
@@ -39,6 +40,8 @@ const ERROR_MESSAGES = {
   loadSettings: 'Nie udało się załadować ustawień.',
   saveKeyMapping: 'Nie udało się zapisać mapowania klawiszy.',
   loadKeyMapping: 'Nie udało się załadować mapowania klawiszy.',
+  saveS18Config: 'Nie udało się zapisać konfiguracji kontrolera S18.',
+  loadS18Config: 'Nie udało się załadować konfiguracji kontrolera S18.',
   exportData: 'Nie udało się wyeksportować danych.',
   importData: 'Nie udało się zaimportować danych.',
   clearAll: 'Nie udało się wyczyścić danych.',
@@ -64,6 +67,10 @@ export interface StorageService {
   // Key Mappings
   saveKeyMapping(mapping: KeyMapping): Promise<void>;
   loadKeyMapping(): Promise<KeyMapping>;
+
+  // S18 Controller Config
+  saveS18Config(config: S18ControllerConfig): Promise<void>;
+  loadS18Config(): Promise<S18ControllerConfig | null>;
 
   // Export/Import
   exportData(): Promise<string>;
@@ -268,6 +275,26 @@ class StorageServiceImpl implements StorageService {
     } catch (error) {
       console.error('Error loading key mapping:', error);
       return DEFAULT_KEY_MAPPING;
+    }
+  }
+
+  // S18 Controller Config
+  async saveS18Config(config: S18ControllerConfig): Promise<void> {
+    try {
+      await AsyncStorage.setItem(KEYS.S18_CONFIG, JSON.stringify(config));
+    } catch (error) {
+      console.error('Error saving S18 config:', error);
+      throw new Error(ERROR_MESSAGES.saveS18Config);
+    }
+  }
+
+  async loadS18Config(): Promise<S18ControllerConfig | null> {
+    try {
+      const data = await AsyncStorage.getItem(KEYS.S18_CONFIG);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('Error loading S18 config:', error);
+      return null;
     }
   }
 

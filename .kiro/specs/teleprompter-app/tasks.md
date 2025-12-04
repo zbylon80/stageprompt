@@ -849,7 +849,12 @@
   - **Property 37: Zmniejszanie prędkości przewijania**
   - **Validates: Requirements 14.5, 14.6**
 
-- [ ] 37. Implementacja hooka useS18Controller
+- [x] 37. Implementacja hooka useS18Controller
+
+
+
+
+
 
   - Utworzenie hooks/useS18Controller.ts
   - Implementacja ładowania konfiguracji z storage
@@ -859,7 +864,9 @@
   - Implementacja resetowania do domyślnych ustawień
   - _Requirements: 14.7, 14.8, 14.9_
 
-- [ ] 37.1 Napisanie testów property dla persystencji konfiguracji S18
+
+- [x] 37.1 Napisanie testów property dla persystencji konfiguracji S18
+
 
   - **Property 38: Round-trip persystencji konfiguracji S18**
   - **Validates: Requirements 14.9**
